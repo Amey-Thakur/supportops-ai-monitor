@@ -160,18 +160,6 @@ ORDER BY created_at ASC;
 
 ---
 
-## Interview Talking Points
-
-When asked about this project in interviews:
-
-1. **"What does this demonstrate?"** — End-to-end support operations workflow: ticket ingestion → AI triage → health monitoring → dashboard visibility. Mirrors exactly what enterprise AI support teams do.
-
-2. **"How did you handle API failures?"** — Error classification by type (rate limits, server errors, timeouts), structured logging of every call with latency and status codes, graceful fallback to simulation mode.
-
-3. **"How would you extend this for production?"** — Add webhook ingestion endpoint, integrate real Salesforce/Zendesk CRM, add Datadog/Splunk log shipping, add SLA breach alerting, add multi-user auth.
-
----
-
 ## Author
 
 **Archit Konde** — Machine Learning Engineer  
