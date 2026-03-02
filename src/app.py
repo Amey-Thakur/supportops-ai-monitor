@@ -46,19 +46,60 @@ CHART_H_PRIMARY   = 300
 CHART_H_SECONDARY = 220
 CHART_MARGIN      = dict(t=32, b=0, l=0, r=0)
 
-# ── Global CSS ────────────────────────────────────────────────────────────────
+# ── Global CSS — VS Code Dark+ terminal aesthetic ─────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-
-html, body, [class*="css"]                          { font-family: 'Inter', system-ui, sans-serif !important; }
-code, pre, .stCode, [data-testid="stCodeBlock"]     { font-family: 'JetBrains Mono', monospace !important; }
-section[data-testid="stSidebar"]                    { background-color: #252526 !important; border-right: 1px solid #3e3e42; }
-[data-testid="metric-container"]                    { background: #252526; border: 1px solid #3e3e42; border-radius: 6px; padding: 1rem; }
-.stDataFrame                                        { border: 1px solid #3e3e42; border-radius: 6px; }
-h1, h2, h3                                         { letter-spacing: -0.02em; font-weight: 600; }
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+html, body, [class*="css"], .stMarkdown, .stText,
+[data-testid="stMetricValue"], [data-testid="stMetricLabel"],
+.stSelectbox, .stMultiSelect, .stSlider, .stButton button,
+h1,h2,h3,h4,h5,h6, p, span, div, label, input, textarea,
+code, pre, .stCode, [data-testid="stCodeBlock"],
+.streamlit-expanderHeader
+  { font-family: 'JetBrains Mono', monospace !important; }
+.stApp { background-color: #1e1e1e !important; }
+section[data-testid="stSidebar"]
+  { background-color: #252526 !important; border-right: 1px solid #3e3e42 !important; }
+.stButton button[kind="primary"], .stButton button[data-testid="baseButton-primary"], button[kind="primary"]
+  { background-color: #C9A84C !important; color: #1e1e1e !important;
+    border: 1px solid #C9A84C !important; font-weight: 600 !important; }
+.stButton button[kind="primary"]:hover, button[kind="primary"]:hover
+  { background-color: #b8972e !important; border-color: #b8972e !important; }
+[data-testid="metric-container"]
+  { background: #252526 !important; border: 1px solid #3e3e42 !important;
+    border-radius: 4px !important; padding: 1rem !important; }
+[data-testid="stMetricValue"] { color: #C9A84C !important; font-weight: 700 !important; }
+.stDataFrame { border: 1px solid #3e3e42 !important; border-radius: 4px !important; }
+.streamlit-expanderHeader { background-color: #252526 !important; border-radius: 4px !important; }
+.stTextInput input, .stTextArea textarea
+  { background-color: #252526 !important; border: 1px solid #3e3e42 !important; color: #d4d4d4 !important; }
+hr { border-color: #3e3e42 !important; }
+h1,h2,h3 { letter-spacing: -0.02em; font-weight: 600; color: #d4d4d4 !important; }
+::selection { background: #C9A84C; color: #1e1e1e; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #1e1e1e; }
+::-webkit-scrollbar-thumb { background: #3e3e42; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #5a5a5e; }
+footer { visibility: hidden !important; }
+.custom-footer { position: fixed; left: 0; bottom: 0; width: 100%;
+  background: rgba(30,30,30,0.95); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid #3e3e42; text-align: center; padding: 0.6rem 1rem;
+  font-size: 0.72rem; color: #858585; z-index: 999; font-family: 'JetBrains Mono', monospace; }
+.custom-footer a { color: #C9A84C; text-decoration: none; }
+.main .block-container { padding-bottom: 4rem !important; }
 </style>
 """, unsafe_allow_html=True)
+
+
+# ── Terminal-style section headers ────────────────────────────────────────────
+def _term(cmd):
+    """Render a terminal-style section header: $ cmd."""
+    st.markdown(
+        f'<p style="font-family:\'JetBrains Mono\',monospace;font-size:0.95rem;'
+        f'color:#d4d4d4;margin:1rem 0 0.5rem;">'
+        f'<span style="color:#C9A84C;font-weight:600;">$</span> {cmd}</p>',
+        unsafe_allow_html=True,
+    )
 
 # ── Init DB ───────────────────────────────────────────────────────────────────
 db.init_db()
@@ -86,8 +127,8 @@ if "data_version" not in st.session_state:
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.title("SupportOps AI Monitor")
-    st.caption("AI Platform · Support Operations")
+    st.markdown("**> SupportOps AI Monitor**")
+    st.caption("// AI Platform · Support Operations")
     st.divider()
 
     st.subheader("Data Controls")
@@ -222,14 +263,19 @@ ticket_df = pd.DataFrame(filtered_tickets) if filtered_tickets else pd.DataFrame
 api_df = pd.DataFrame(api_logs) if api_logs else pd.DataFrame()
 
 # ── Header ────────────────────────────────────────────────────────────────────
-st.title("SupportOps AI Monitor")
+st.markdown(
+    '<h1 style="font-family:\'JetBrains Mono\',monospace;color:#d4d4d4;'
+    'font-size:1.6rem;font-weight:700;letter-spacing:-0.03em;">'
+    '<span style="color:#C9A84C;">&gt;</span> SupportOps AI Monitor</h1>',
+    unsafe_allow_html=True,
+)
 st.caption(
     f"Last updated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC  ·  "
     f"Showing {len(filtered_tickets)} of {len(all_tickets)} tickets"
 )
 
 # ── Section 1: KPI Metrics ────────────────────────────────────────────────────
-st.subheader("Overview")
+_term("cat overview")
 
 kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
 
@@ -258,7 +304,7 @@ else:
 st.divider()
 
 # ── Section 2: Ticket Analytics ───────────────────────────────────────────────
-st.subheader("Ticket Analytics")
+_term("./analytics --tickets")
 
 col1, col2, col3 = st.columns(3)
 
@@ -350,7 +396,7 @@ if not ticket_df.empty and "created_at" in ticket_df.columns:
 st.divider()
 
 # ── Section 3: API Health ─────────────────────────────────────────────────────
-st.subheader("API Health")
+_term("./health --api")
 
 if not api_df.empty:
     col1, col2 = st.columns(2)
@@ -424,7 +470,7 @@ if not api_df.empty:
 st.divider()
 
 # ── Section 4: Ticket Queue ───────────────────────────────────────────────────
-st.subheader("Ticket Queue")
+_term("ls tickets/")
 
 if not ticket_df.empty:
     display_cols = ["ticket_id", "created_at", "customer", "subject", "priority", "status", "category", "sentiment", "ai_summary"]
@@ -475,20 +521,17 @@ if not ticket_df.empty:
 st.divider()
 
 # ── Section 5: Raw API Logs ───────────────────────────────────────────────────
-with st.expander("Raw API Logs (last 100 calls)"):
+with st.expander("$ tail -f api.log (last 100 calls)"):
     if not api_df.empty:
         st.dataframe(api_df.head(100), use_container_width=True, height=300)
     else:
         st.write("No API logs yet.")
 
-# ── Footer ────────────────────────────────────────────────────────────────────
-st.divider()
+# ── Fixed footer ──────────────────────────────────────────────────────────────
 st.markdown(
-    '<div style="text-align:center;padding:1rem 0;font-size:0.78rem;color:#858585;'
-    'font-family:\'JetBrains Mono\',monospace;">'
+    '<div class="custom-footer">'
     '&copy; 2026 All rights reserved. Designed &amp; Developed by '
-    '<a href="https://archit-konde.github.io/" target="_blank" '
-    'style="color:#C9A84C;text-decoration:none;">Archit Konde</a>'
+    '<a href="https://archit-konde.github.io/" target="_blank">Archit Konde</a>'
     '</div>',
     unsafe_allow_html=True,
 )

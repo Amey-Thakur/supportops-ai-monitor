@@ -486,6 +486,38 @@
       margin-right: 0.2rem;
     }
 
+    /* ── Interactive CLI ── */
+    #cli-input-display {
+      color: var(--text);
+      font-size: 0.82rem;
+      white-space: pre;
+    }
+
+    .cli-response {
+      font-size: 0.82rem;
+      color: var(--muted);
+      padding-left: 0.4rem;
+    }
+
+    .cli-response.error { color: #f87171; }
+    .cli-response.accent { color: var(--accent); }
+
+    /* exit 0 fade-to-black animation */
+    .exit-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9998;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.8s ease;
+    }
+
+    .exit-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
     /* ── Responsive ── */
     @media (max-width: 600px) {
       .nav-links { gap: var(--s2); }
@@ -502,6 +534,9 @@
   </style>
 </head>
 <body>
+
+  <!-- Exit overlay (for exit 0 Easter egg) -->
+  <div id="exit-overlay" class="exit-overlay"></div>
 
   <!-- Boot sequence overlay -->
   <div id="boot-overlay" class="boot-overlay" aria-hidden="true">
@@ -612,9 +647,11 @@
           <p class="t-out">&rarr; 46 tests &middot; CI via GitHub Actions &middot; SQLite persistence</p>
         </div>
 
-        <p class="t-line" style="margin-top: 0.8rem;">
-          <span class="t-prompt">archit@portfolio:~$</span><span class="cursor"> &#9608;</span>
+        <p class="t-line" style="margin-top: 0.8rem;" id="interactive-prompt">
+          <span class="t-prompt">archit@portfolio:~$</span>
+          <span id="cli-input-display"></span><span class="cursor" id="cli-cursor"> &#9608;</span>
         </p>
+        <div id="cli-output" style="display:flex;flex-direction:column;gap:0.2rem;"></div>
 
       </div>
     </div><!-- /.term -->
@@ -838,6 +875,116 @@
     console.log('%c  Try Ctrl+K for the command palette', green);
     console.log('%c  Or try the Konami code...', grey);
     console.log('%c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500', line);
+  })();
+
+  /* ── Interactive terminal ── */
+  (function interactiveCLI() {
+    var display = document.getElementById('cli-input-display');
+    var output = document.getElementById('cli-output');
+    var cursor = document.getElementById('cli-cursor');
+    var prompt = document.getElementById('interactive-prompt');
+    if (!display || !output) return;
+
+    var buffer = '';
+    var active = false;
+
+    /* Click terminal area to activate */
+    var termBody = prompt.closest('.term-body');
+    if (termBody) {
+      termBody.style.cursor = 'text';
+      termBody.addEventListener('click', function() { active = true; });
+    }
+
+    function addResponse(text, cls) {
+      var p = document.createElement('p');
+      p.className = 'cli-response' + (cls ? ' ' + cls : '');
+      p.textContent = text;
+      output.appendChild(p);
+      p.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function addPromptLine(cmd) {
+      var p = document.createElement('p');
+      p.className = 't-line';
+      p.innerHTML = '<span class="t-prompt">archit@portfolio:~$</span> ' + cmd;
+      output.appendChild(p);
+    }
+
+    function exitAnimation() {
+      var overlay = document.getElementById('exit-overlay');
+      if (!overlay) return;
+      overlay.classList.add('active');
+      setTimeout(function() {
+        overlay.classList.remove('active');
+      }, 2000);
+    }
+
+    function handleCommand(cmd) {
+      var lower = cmd.trim().toLowerCase();
+      addPromptLine(cmd);
+
+      if (lower === 'help') {
+        addResponse('Available commands:', 'accent');
+        addResponse('  help          — show this message');
+        addResponse('  ls            — list project features');
+        addResponse('  cd demo       — launch live demo');
+        addResponse('  cat stack     — show tech stack');
+        addResponse('  clear         — clear output');
+        addResponse('  exit / exit 0 — shutdown animation');
+        addResponse('  sudo <cmd>    — try it :)');
+      } else if (lower === 'ls') {
+        addResponse('→ AI triage via gpt-4o-mini · runs fully in simulation mode');
+        addResponse('→ API health monitoring: latency, error rates, HTTP status logs');
+        addResponse('→ live observability dashboard — Plotly charts, ticket queue');
+        addResponse('→ CSV/Excel upload — bring your own ticket data');
+        addResponse('→ 46 tests · CI via GitHub Actions · SQLite persistence');
+      } else if (lower === 'cd demo') {
+        addResponse('Redirecting to live demo...', 'accent');
+        setTimeout(function() {
+          window.open('https://architechs-supportops-ai-monitor.hf.space', '_blank');
+        }, 500);
+      } else if (lower === 'cat stack') {
+        addResponse('python · streamlit · openai gpt-4o-mini · sqlite · plotly · faker · pytest');
+      } else if (lower === 'clear') {
+        output.innerHTML = '';
+        return;
+      } else if (lower === 'exit' || lower === 'exit 0') {
+        addResponse('logout', 'accent');
+        addResponse('[Process completed]');
+        exitAnimation();
+      } else if (lower.startsWith('sudo')) {
+        addResponse('Permission denied. You are not in the sudoers file.', 'error');
+        addResponse('This incident will be reported.', 'error');
+      } else if (lower === '') {
+        /* empty enter — do nothing */
+      } else {
+        addResponse('command not found: ' + cmd.trim(), 'error');
+        addResponse("Type 'help' for available commands.");
+      }
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (!active) return;
+      /* Don't capture if command palette is open or typing in real input */
+      if (!document.getElementById('cmd-palette').hidden) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        buffer = buffer.slice(0, -1);
+        display.textContent = buffer;
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        var cmd = buffer;
+        buffer = '';
+        display.textContent = '';
+        handleCommand(cmd);
+      } else if (e.key.length === 1) {
+        e.preventDefault();
+        buffer += e.key;
+        display.textContent = buffer;
+      }
+    });
   })();
 
   /* ── Footer year ── */
