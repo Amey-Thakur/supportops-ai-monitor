@@ -8,7 +8,7 @@ import os
 import time
 import json
 import random
-from datetime import datetime
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -50,7 +50,7 @@ def _simulate_triage(ticket: dict) -> tuple[dict, dict]:
     if rand < 0.04:
         # Rate limit error
         log = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "endpoint": "/v1/chat/completions",
             "status_code": 429,
             "latency_ms": round(latency, 2),
@@ -62,7 +62,7 @@ def _simulate_triage(ticket: dict) -> tuple[dict, dict]:
     elif rand < 0.07:
         # Server error
         log = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "endpoint": "/v1/chat/completions",
             "status_code": 500,
             "latency_ms": round(latency, 2),
@@ -74,7 +74,7 @@ def _simulate_triage(ticket: dict) -> tuple[dict, dict]:
     elif rand < 0.10:
         # Timeout
         log = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "endpoint": "/v1/chat/completions",
             "status_code": 408,
             "latency_ms": round(latency + 5000, 2),
@@ -107,7 +107,7 @@ def _simulate_triage(ticket: dict) -> tuple[dict, dict]:
     }
 
     log = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "endpoint": "/v1/chat/completions",
         "status_code": 200,
         "latency_ms": round(latency, 2),
@@ -166,7 +166,7 @@ def triage_ticket(ticket: dict) -> dict | None:
             result["sentiment"] = "neutral"
 
         log = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "endpoint": "/v1/chat/completions",
             "status_code": 200,
             "latency_ms": round(latency_ms, 2),
@@ -201,7 +201,7 @@ def triage_ticket(ticket: dict) -> dict | None:
             status_code = 0
 
         log = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "endpoint": "/v1/chat/completions",
             "status_code": status_code,
             "latency_ms": round(latency_ms, 2),

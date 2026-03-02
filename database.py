@@ -6,7 +6,7 @@ Tables: tickets, api_health_logs
 
 import sqlite3
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 # HuggingFace Spaces persists /data between restarts — set DB_PATH=/data/supportops.db
 # in the HF Space secrets/env vars to enable persistence.
@@ -114,7 +114,7 @@ def resolve_ticket(ticket_id: str):
             UPDATE tickets
             SET status = 'resolved', resolved_at = ?
             WHERE ticket_id = ?
-        """, (datetime.utcnow().isoformat(), ticket_id))
+        """, (datetime.now(timezone.utc).isoformat(), ticket_id))
         conn.commit()
     finally:
         conn.close()

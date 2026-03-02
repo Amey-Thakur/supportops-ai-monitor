@@ -7,7 +7,7 @@ Run with: streamlit run app.py
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from datetime import datetime
+from datetime import datetime, timezone
 
 import database as db
 import ticket_generator as tg
@@ -152,7 +152,7 @@ api_df = pd.DataFrame(api_logs) if api_logs else pd.DataFrame()
 # ── Header ────────────────────────────────────────────────────────────────────
 st.title("SupportOps AI Monitor")
 st.caption(
-    f"Last updated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC  ·  "
+    f"Last updated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC  ·  "
     f"Showing {len(filtered_tickets)} of {len(all_tickets)} tickets"
 )
 

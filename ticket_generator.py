@@ -7,7 +7,7 @@ Simulates the kind of tickets an OpenAI / AI platform support team would receive
 import json
 import random
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from faker import Faker
 
 fake = Faker()
@@ -245,7 +245,7 @@ def generate_ticket(days_back: int = 30) -> dict:
     template = random.choice(TICKET_TEMPLATES[category])
     filled = _fill_template(template)
 
-    created_at = datetime.utcnow() - timedelta(
+    created_at = datetime.now(timezone.utc) - timedelta(
         days=random.randint(0, days_back),
         hours=random.randint(0, 23),
         minutes=random.randint(0, 59),
