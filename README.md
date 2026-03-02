@@ -1,5 +1,7 @@
 # SupportOps AI Monitor
 
+![CI](https://github.com/Archit-Konde/supportops-ai-monitor/actions/workflows/lint-test.yml/badge.svg)
+
 I wanted to understand what enterprise AI platform support actually looks like operationally — what kinds of tickets come in, how teams triage them at scale, and how API reliability gets measured day-to-day. This is what I built to find out.
 
 It simulates a full support operations workflow: ticket generation, AI-powered triage via OpenAI, API health logging, and a live observability dashboard. Works completely in simulation mode with no API key required.
