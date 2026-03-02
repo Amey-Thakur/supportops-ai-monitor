@@ -1,0 +1,68 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "name": "SupportOps AI Monitor",
+  "version": "1.0.0",
+  "description": "Simulated enterprise AI support operations dashboard: synthetic ticket generation, GPT-4o-mini triage, API health monitoring, and a Streamlit observability dashboard. Deployable on HuggingFace Spaces via Docker SDK.",
+  "dateCreated": "2026-03-01",
+  "datePublished": "2026-03-01",
+  "license": "https://spdx.org/licenses/MIT.html",
+  "url": "https://archit-konde.github.io/supportops-ai-monitor/",
+  "codeRepository": "https://github.com/Archit-Konde/supportops-ai-monitor",
+  "issueTracker": "https://github.com/Archit-Konde/supportops-ai-monitor/issues",
+  "programmingLanguage": [
+    {
+      "@type": "ComputerLanguage",
+      "name": "Python",
+      "version": "3.11"
+    }
+  ],
+  "runtimePlatform": [
+    "Python 3.11",
+    "Docker",
+    "HuggingFace Spaces"
+  ],
+  "operatingSystem": "Linux",
+  "applicationCategory": "DeveloperApplication",
+  "keywords": [
+    "streamlit",
+    "openai",
+    "support-operations",
+    "ai-triage",
+    "observability",
+    "dashboard",
+    "sqlite",
+    "plotly",
+    "huggingface-spaces",
+    "portfolio"
+  ],
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Archit",
+      "familyName": "Konde",
+      "email": "architkonde19@gmail.com",
+      "identifier": "https://orcid.org/0000-0002-2422-117X",
+      "url": "https://archit-konde.github.io"
+    }
+  ],
+  "maintainer": [
+    {
+      "@type": "Person",
+      "givenName": "Archit",
+      "familyName": "Konde",
+      "email": "architkonde19@gmail.com"
+    }
+  ],
+  "softwareRequirements": [
+    "streamlit>=1.32.0",
+    "openai>=1.14.0",
+    "pandas>=2.2.1",
+    "plotly>=5.20.0",
+    "faker>=24.2.0",
+    "python-dotenv>=1.0.1"
+  ],
+  "relatedLink": [
+    "https://huggingface.co/spaces/architechs/supportops-ai-monitor"
+  ]
+}

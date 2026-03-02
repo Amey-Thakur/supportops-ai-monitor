@@ -76,7 +76,7 @@ cp .env.example .env
 # Add OPENAI_API_KEY to .env if you want real triage
 
 # 4. Run
-streamlit run app.py
+streamlit run src/app.py
 ```
 
 Opens at `http://localhost:8501`. Use the sidebar to generate and triage tickets.

@@ -16,3 +16,13 @@ build
 CLAUDE.md
 README.md
 LICENSE
+# Documentation, metadata, and dirs not needed in Docker image
+infrastructure/
+assets/
+CHANGELOG.md
+SECURITY.md
+codemeta.json
+CITATION.cff
+blog/
+tests/
+docs/

@@ -4,7 +4,8 @@ FROM python:3.11-slim
 RUN useradd -m -u 1000 user
 USER user
 ENV HOME=/home/user \
-    PATH=/home/user/.local/bin:$PATH
+    PATH=/home/user/.local/bin:$PATH \
+    PYTHONPATH=/home/user/app/src
 
 WORKDIR $HOME/app
 
@@ -12,8 +13,8 @@ WORKDIR $HOME/app
 COPY --chown=user requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY --chown=user app.py database.py ai_triage.py ticket_generator.py ./
+# Copy application source and config
+COPY --chown=user src/ ./src/
 COPY --chown=user .streamlit .streamlit
 
 # Create runtime directories
@@ -23,4 +24,4 @@ EXPOSE 8501
 
 HEALTHCHECK CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health')" || exit 1
 
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "src/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
