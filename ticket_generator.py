@@ -214,9 +214,6 @@ TICKET_TEMPLATES = {
     ],
 }
 
-PRIORITIES = ["low", "medium", "high", "critical"]
-PRIORITY_WEIGHTS = [0.3, 0.4, 0.2, 0.1]
-
 
 def _fill_template(template: dict) -> dict:
     """Fill template placeholders with fake data."""

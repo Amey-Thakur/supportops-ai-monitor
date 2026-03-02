@@ -1,0 +1,36 @@
+# Normalise line endings to LF everywhere
+* text=auto
+
+# Source and config — always LF
+*.py        text eol=lf
+*.md        text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.toml      text eol=lf
+*.json      text eol=lf
+*.txt       text eol=lf
+*.html      text eol=lf
+*.css       text eol=lf
+*.js        text eol=lf
+*.sh        text eol=lf
+*.sql       text eol=lf
+*.cff       text eol=lf
+Dockerfile  text eol=lf
+.gitignore  text eol=lf
+.env*       text eol=lf
+
+# Binary — never diff or mangle
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.ico  binary
+*.gif  binary
+*.pdf  binary
+*.svg  binary
+
+# GitHub Linguist — documentation files don't count as code
+CLAUDE.md   linguist-documentation=true
+README.md   linguist-documentation=true
+
+# Linguist — make Dockerfile visible as a detected language
+Dockerfile  linguist-detectable=true

@@ -1,100 +1,123 @@
-# SupportOps AI Monitor 🎫
+# SupportOps AI Monitor
 
-A Python-based support operations dashboard that simulates and monitors enterprise AI platform support workflows. Built to demonstrate real-world technical support skills including log analysis, API health monitoring, ticket triage, SQL querying, JSON parsing, and observability dashboarding.
+I wanted to understand what enterprise AI platform support actually looks like operationally — what kinds of tickets come in, how teams triage them at scale, and how API reliability gets measured day-to-day. This is what I built to find out.
 
-> **Built as a portfolio project to demonstrate skills for Enterprise AI Support / Technical Support Engineer roles.**
+It simulates a full support operations workflow: ticket generation, AI-powered triage via OpenAI, API health logging, and a live observability dashboard. Works completely in simulation mode with no API key required.
 
 ---
 
 ## What It Does
 
-- **Generates realistic support tickets** — simulates the kind of tickets an OpenAI/AI platform support team receives: API errors, billing disputes, account issues, safety concerns
-- **AI-powered ticket triage** — calls the OpenAI API to categorize tickets by type, analyze customer sentiment, and generate one-line summaries
-- **API health monitoring** — logs every API call with latency, HTTP status code, and error type (mirrors Datadog/Splunk-style observability)
-- **Operational dashboard** — visualizes ticket volume, priority distribution, category breakdown, sentiment trends, API error rates, and latency over time
-- **SQLite persistence** — all data stored in a local database with queryable tables
+- **Generates realistic support tickets** — API errors, billing disputes, account issues, safety concerns — the kinds of things an AI platform support team actually deals with
+- **AI triage** — classifies each ticket by category, analyses customer sentiment, and produces a one-line summary using `gpt-4o-mini`
+- **API health monitoring** — logs every API call with latency, HTTP status code, and error type, mirroring how observability tools like Datadog or Splunk work
+- **Operational dashboard** — Streamlit + Plotly charts for ticket volume, priority distribution, sentiment trends, API error rates, and latency over time
+- **SQLite persistence** — all data stored locally and queryable
 
 ---
 
-## Technical Skills Demonstrated
+## Architecture
 
-| Skill | How It's Used |
-|-------|---------------|
-| **JSON parsing** | Ticket data ingestion, OpenAI API request/response handling |
-| **SQL (SQLite)** | Ticket storage, aggregate stats queries, filtering |
-| **API troubleshooting** | OpenAI API calls with error handling (429, 500, 408), structured logging |
-| **Log analysis** | `api_health_logs` table mirrors real observability — latency, error types, status codes |
-| **Dashboard/monitoring** | Streamlit + Plotly charts for real-time operational visibility |
-| **Python** | Core application logic, data pipeline, CLI tooling |
-| **Git/GitHub** | Version controlled, documented, open source |
+```mermaid
+flowchart LR
+    A["ticket_generator.py\nFaker templates"] -->|"dict"| B[("SQLite\ntickets")]
+    B -->|"ticket"| C["ai_triage.py\ngpt-4o-mini"]
+    C -->|"category · sentiment · summary"| B
+    C -->|"latency · status_code · error_type"| D[("SQLite\napi_health_logs")]
+    B --> E["app.py\nStreamlit"]
+    D --> E
+```
+
+```mermaid
+erDiagram
+    tickets {
+        TEXT ticket_id PK
+        TEXT created_at
+        TEXT customer
+        TEXT subject
+        TEXT body
+        TEXT priority
+        TEXT status
+        TEXT category
+        TEXT sentiment
+        TEXT ai_summary
+        TEXT resolved_at
+    }
+    api_health_logs {
+        INTEGER id PK
+        TEXT timestamp
+        TEXT endpoint
+        INTEGER status_code
+        REAL latency_ms
+        INTEGER success
+        TEXT error_type
+        TEXT ticket_id FK
+    }
+    tickets ||--o{ api_health_logs : "triage call"
+```
+
+---
+
+## Triage Flow
+
+```mermaid
+flowchart TD
+    A[triage_ticket] --> B{"OPENAI_API_KEY\nset?"}
+    B -- No --> C["_simulate_triage\nGaussian latency · 10% error rate"]
+    B -- Yes --> D["OpenAI API\ngpt-4o-mini"]
+    D --> E{"HTTP 200?"}
+    E -- Yes --> F["Parse JSON\nvalidate fields"]
+    E -- No --> G["Log error_type\nrate_limit · timeout · server_error"]
+    C --> H["INSERT api_health_logs\nUPDATE tickets"]
+    F --> H
+    G --> H
+```
 
 ---
 
 ## Tech Stack
 
 - **Python 3.11+**
-- **Streamlit** — dashboard framework
-- **SQLite** — persistent storage
+- **Streamlit** — dashboard
+- **SQLite** — local persistence
 - **OpenAI API** (`gpt-4o-mini`) — ticket triage
-- **Plotly** — interactive charts
-- **Pandas** — data manipulation
-- **Faker** — realistic test data generation
+- **Plotly** — charts
+- **Pandas** — data handling
+- **Faker** — realistic synthetic data
 
 ---
 
 ## Getting Started
 
-### 1. Clone the repo
 ```bash
+# 1. Clone
 git clone https://github.com/Archit-Konde/supportops-ai-monitor.git
 cd supportops-ai-monitor
-```
 
-### 2. Install dependencies
-```bash
+# 2. Install
 pip install -r requirements.txt
-```
 
-### 3. Set up environment variables
-```bash
+# 3. Set up env (optional — app works without it in simulation mode)
 cp .env.example .env
-# Edit .env and add your OpenAI API key (optional — app works without it using simulation mode)
-```
+# Add OPENAI_API_KEY to .env if you want real triage
 
-### 4. Run the dashboard
-```bash
+# 4. Run
 streamlit run app.py
 ```
 
-The app opens at `http://localhost:8501`. Use the sidebar to generate tickets and run AI triage.
+Opens at `http://localhost:8501`. Use the sidebar to generate and triage tickets.
 
 ---
 
-## Without an OpenAI API Key
+## Simulation Mode
 
-The app runs in **simulation mode** when no API key is provided. The simulation realistically models:
-- API latency (Gaussian distribution, mean ~820ms)
-- 10% error rate with realistic error type distribution (rate limits, server errors, timeouts)
-- HTTP status codes (200, 429, 500, 408)
+No API key needed. When `OPENAI_API_KEY` is absent, the app falls back to a simulation that models realistic API behaviour:
 
-This means the full dashboard is demonstrable without any API costs.
+- **Latency** — Gaussian distribution (mean ~820ms, σ 200ms)
+- **Error rate** — 10% failure rate across rate limits, server errors, and timeouts
+- **HTTP status codes** — 200, 429, 500, 408 in realistic proportions
 
----
-
-## Project Structure
-
-```
-supportops-ai-monitor/
-├── app.py                  # Streamlit dashboard (main entry point)
-├── database.py             # SQLite schema, queries, and connection management
-├── ticket_generator.py     # Realistic support ticket generation
-├── ai_triage.py            # OpenAI API calls + health logging
-├── requirements.txt
-├── .env.example
-├── data/                   # JSON ticket exports
-├── logs/                   # Application logs
-└── db/                     # SQLite database file
-```
+The full dashboard is demonstrable at zero cost.
 
 ---
 
@@ -103,16 +126,16 @@ supportops-ai-monitor/
 ### `tickets`
 | Column | Type | Description |
 |--------|------|-------------|
-| `ticket_id` | TEXT | Unique ticket identifier (TKT-XXXXXXXX) |
+| `ticket_id` | TEXT | Unique identifier (`TKT-XXXXXXXX`) |
 | `created_at` | TEXT | ISO timestamp |
 | `customer` | TEXT | Company name |
 | `subject` | TEXT | Ticket subject |
-| `body` | TEXT | Full ticket description |
-| `priority` | TEXT | low / medium / high / critical |
-| `status` | TEXT | open / in_progress / resolved |
-| `category` | TEXT | AI-assigned: api / billing / account / safety / other |
-| `sentiment` | TEXT | AI-assigned: positive / neutral / negative |
-| `ai_summary` | TEXT | AI-generated one-line summary |
+| `body` | TEXT | Full description |
+| `priority` | TEXT | `low` / `medium` / `high` / `critical` |
+| `status` | TEXT | `open` / `in_progress` / `resolved` |
+| `category` | TEXT | AI-assigned: `api` / `billing` / `account` / `safety` / `other` |
+| `sentiment` | TEXT | AI-assigned: `positive` / `neutral` / `negative` |
+| `ai_summary` | TEXT | One-line AI-generated summary |
 | `resolved_at` | TEXT | Resolution timestamp |
 
 ### `api_health_logs`
@@ -122,45 +145,13 @@ supportops-ai-monitor/
 | `endpoint` | TEXT | API endpoint called |
 | `status_code` | INTEGER | HTTP response code |
 | `latency_ms` | REAL | Response time in milliseconds |
-| `success` | INTEGER | 1 = success, 0 = failure |
-| `error_type` | TEXT | rate_limit / server_error / timeout / null |
+| `success` | INTEGER | `1` = success, `0` = failure |
+| `error_type` | TEXT | `rate_limit` / `server_error` / `timeout` / `null` |
 | `ticket_id` | TEXT | Associated ticket |
-
----
-
-## Key SQL Queries
-
-```sql
--- Ticket volume by category
-SELECT category, COUNT(*) as count
-FROM tickets
-WHERE category IS NOT NULL
-GROUP BY category ORDER BY count DESC;
-
--- API error rate
-SELECT
-  COUNT(*) as total_calls,
-  SUM(CASE WHEN success = 0 THEN 1 ELSE 0 END) as failures,
-  ROUND(AVG(CASE WHEN success = 0 THEN 1.0 ELSE 0 END) * 100, 1) as error_rate_pct
-FROM api_health_logs;
-
--- P95 API latency
-SELECT latency_ms
-FROM api_health_logs
-WHERE success = 1
-ORDER BY latency_ms
-LIMIT 1 OFFSET (SELECT CAST(COUNT(*) * 0.95 AS INT) FROM api_health_logs WHERE success = 1);
-
--- High priority open tickets
-SELECT ticket_id, customer, subject, priority, created_at
-FROM tickets
-WHERE status = 'open' AND priority IN ('critical', 'high')
-ORDER BY created_at ASC;
-```
 
 ---
 
 ## Author
 
-**Archit Konde** — Machine Learning Engineer  
+**Archit Konde**
 [archit-konde.github.io](https://archit-konde.github.io) · [GitHub](https://github.com/Archit-Konde) · [LinkedIn](https://linkedin.com/in/architkonde)

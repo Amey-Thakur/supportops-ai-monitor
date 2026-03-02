@@ -7,7 +7,6 @@ Run with: streamlit run app.py
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 from datetime import datetime
 
 import database as db
@@ -22,10 +21,48 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# ── Design tokens ─────────────────────────────────────────────────────────────
+COLORS = {
+    "bg":      "#1e1e1e",
+    "surface": "#252526",
+    "border":  "#3e3e42",
+    "text":    "#d4d4d4",
+    "muted":   "#6b7280",
+    "accent":  "#C9A84C",
+    "success": "#4ade80",
+    "warning": "#fb923c",
+    "danger":  "#f87171",
+    "neutral": "#6b7280",
+    "indigo":  "#818cf8",
+}
+
+PRIORITY_COLORS  = {"critical": COLORS["danger"],  "high": COLORS["warning"], "medium": "#facc15", "low": COLORS["success"]}
+SENTIMENT_COLORS = {"positive": COLORS["success"], "neutral": COLORS["neutral"], "negative": COLORS["danger"]}
+ERROR_COLORS     = {"rate_limit": COLORS["warning"], "server_error": COLORS["danger"], "timeout": "#facc15", "unknown": COLORS["neutral"]}
+HTTP_COLORS      = {"200": COLORS["success"], "429": COLORS["warning"], "500": COLORS["danger"], "408": "#facc15", "0": COLORS["neutral"]}
+
+CHART_H_PRIMARY   = 300
+CHART_H_SECONDARY = 220
+CHART_MARGIN      = dict(t=32, b=0, l=0, r=0)
+
+# ── Global CSS ────────────────────────────────────────────────────────────────
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+html, body, [class*="css"]                          { font-family: 'Inter', system-ui, sans-serif !important; }
+code, pre, .stCode, [data-testid="stCodeBlock"]     { font-family: 'JetBrains Mono', monospace !important; }
+section[data-testid="stSidebar"]                    { background-color: #252526 !important; border-right: 1px solid #3e3e42; }
+[data-testid="metric-container"]                    { background: #252526; border: 1px solid #3e3e42; border-radius: 6px; padding: 1rem; }
+.stDataFrame                                        { border: 1px solid #3e3e42; border-radius: 6px; }
+h1, h2, h3                                         { letter-spacing: -0.02em; font-weight: 600; }
+</style>
+""", unsafe_allow_html=True)
+
 # ── Init DB ───────────────────────────────────────────────────────────────────
 db.init_db()
 
-# ── Cached data loaders ──────────────────────────────────────────────────────
+# ── Cached data loaders ───────────────────────────────────────────────────────
 @st.cache_data(ttl=60)
 def load_all_tickets(_version):
     """Load all tickets from DB. _version param busts cache on new data."""
@@ -48,16 +85,16 @@ if "data_version" not in st.session_state:
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.title("🎫 SupportOps AI Monitor")
-    st.caption("Enterprise AI Platform · Support Dashboard")
+    st.title("SupportOps AI Monitor")
+    st.caption("AI Platform · Support Operations")
     st.divider()
 
-    st.subheader("⚙️ Data Controls")
+    st.subheader("Data Controls")
 
     n_tickets = st.slider("Tickets to generate", min_value=10, max_value=200, value=50, step=10)
     days_back = st.slider("Days back", min_value=7, max_value=90, value=30)
 
-    if st.button("🔄 Generate & Triage Tickets", use_container_width=True, type="primary"):
+    if st.button("Generate & Triage Tickets", use_container_width=True, type="primary"):
         try:
             with st.spinner("Generating tickets..."):
                 tickets = tg.generate_batch(n=n_tickets, days_back=days_back)
@@ -69,22 +106,22 @@ with st.sidebar:
 
             def update_progress(i, total):
                 progress_bar.progress(i / total)
-                status_text.text(f"Triaging ticket {i}/{total}...")
+                status_text.text(f"Triaging {i} of {total}...")
 
             with st.spinner("Running AI triage..."):
                 stats = ai_triage.triage_batch(tickets, progress_callback=update_progress)
 
             progress_bar.empty()
             status_text.empty()
-            st.success(f"✅ {stats['success']} triaged · {stats['failed']} failed")
+            st.success(f"{stats['success']} triaged · {stats['failed']} failed")
             st.session_state.data_version += 1
             st.rerun()
         except Exception as e:
-            st.error(f"❌ Error during ticket generation/triage: {e}")
+            st.error(f"Error during ticket generation/triage: {e}")
 
     st.divider()
 
-    st.subheader("🔍 Filters")
+    st.subheader("Filters")
     status_filter = st.multiselect(
         "Ticket Status",
         options=["open", "in_progress", "resolved"],
@@ -97,7 +134,7 @@ with st.sidebar:
     )
 
     st.divider()
-    st.caption("Built by Archit Konde · [GitHub](https://github.com/Archit-Konde)")
+    st.caption("Archit Konde · [GitHub](https://github.com/Archit-Konde)")
 
 # ── Load data ─────────────────────────────────────────────────────────────────
 all_tickets = load_all_tickets(st.session_state.data_version)
@@ -113,11 +150,14 @@ ticket_df = pd.DataFrame(filtered_tickets) if filtered_tickets else pd.DataFrame
 api_df = pd.DataFrame(api_logs) if api_logs else pd.DataFrame()
 
 # ── Header ────────────────────────────────────────────────────────────────────
-st.title("🎫 SupportOps AI Monitor")
-st.caption(f"Last updated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC  ·  Showing {len(filtered_tickets)} of {len(all_tickets)} tickets")
+st.title("SupportOps AI Monitor")
+st.caption(
+    f"Last updated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC  ·  "
+    f"Showing {len(filtered_tickets)} of {len(all_tickets)} tickets"
+)
 
 # ── Section 1: KPI Metrics ────────────────────────────────────────────────────
-st.subheader("📊 Overview")
+st.subheader("Overview")
 
 kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
 
@@ -140,18 +180,17 @@ if all_tickets:
         latency = api_stats.get("avg_latency_ms", 0)
         st.metric("Avg API Latency", f"{latency} ms")
 else:
-    st.info("👈 Use the sidebar to generate and triage tickets to populate the dashboard.")
+    st.info("Use the sidebar to generate and triage tickets to populate the dashboard.")
     st.stop()
 
 st.divider()
 
 # ── Section 2: Ticket Analytics ───────────────────────────────────────────────
-st.subheader("🎫 Ticket Analytics")
+st.subheader("Ticket Analytics")
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    # Category breakdown
     if not ticket_df.empty and "category" in ticket_df.columns:
         cat_counts = ticket_df["category"].value_counts().reset_index()
         cat_counts.columns = ["category", "count"]
@@ -160,22 +199,15 @@ with col1:
             names="category",
             values="count",
             title="Tickets by Category",
-            color_discrete_sequence=px.colors.qualitative.Set3,
+            color_discrete_sequence=list(PRIORITY_COLORS.values()),
             hole=0.4,
         )
-        fig.update_layout(height=300, margin=dict(t=40, b=0))
+        fig.update_layout(height=CHART_H_PRIMARY, margin=CHART_MARGIN)
         st.plotly_chart(fig, use_container_width=True)
 
 with col2:
-    # Priority breakdown
     if not ticket_df.empty and "priority" in ticket_df.columns:
         priority_order = ["critical", "high", "medium", "low"]
-        priority_colors = {
-            "critical": "#ef4444",
-            "high": "#f97316",
-            "medium": "#eab308",
-            "low": "#22c55e",
-        }
         pri_counts = (
             ticket_df["priority"]
             .value_counts()
@@ -190,11 +222,11 @@ with col2:
             y="count",
             title="Tickets by Priority",
             color="priority",
-            color_discrete_map=priority_colors,
+            color_discrete_map=PRIORITY_COLORS,
         )
         fig.update_layout(
-            height=300,
-            margin=dict(t=40, b=0),
+            height=CHART_H_PRIMARY,
+            margin=CHART_MARGIN,
             showlegend=False,
             xaxis_title="",
             yaxis_title="Count",
@@ -202,35 +234,28 @@ with col2:
         st.plotly_chart(fig, use_container_width=True)
 
 with col3:
-    # Sentiment breakdown
     if not ticket_df.empty and "sentiment" in ticket_df.columns:
         sent_df = ticket_df[ticket_df["sentiment"].notna()]
         if not sent_df.empty:
             sent_counts = sent_df["sentiment"].value_counts().reset_index()
             sent_counts.columns = ["sentiment", "count"]
-            sentiment_colors = {
-                "positive": "#22c55e",
-                "neutral": "#94a3b8",
-                "negative": "#ef4444",
-            }
             fig = px.bar(
                 sent_counts,
                 x="sentiment",
                 y="count",
                 title="Customer Sentiment",
                 color="sentiment",
-                color_discrete_map=sentiment_colors,
+                color_discrete_map=SENTIMENT_COLORS,
             )
             fig.update_layout(
-                height=300,
-                margin=dict(t=40, b=0),
+                height=CHART_H_PRIMARY,
+                margin=CHART_MARGIN,
                 showlegend=False,
                 xaxis_title="",
                 yaxis_title="Count",
             )
             st.plotly_chart(fig, use_container_width=True)
 
-# Ticket volume over time
 if not ticket_df.empty and "created_at" in ticket_df.columns:
     ticket_df["created_date"] = pd.to_datetime(ticket_df["created_at"]).dt.date
     volume_df = ticket_df.groupby("created_date").size().reset_index(name="count")
@@ -240,11 +265,11 @@ if not ticket_df.empty and "created_at" in ticket_df.columns:
         y="count",
         title="Ticket Volume Over Time",
         markers=True,
-        color_discrete_sequence=["#6366f1"],
+        color_discrete_sequence=[COLORS["indigo"]],
     )
     fig.update_layout(
-        height=250,
-        margin=dict(t=40, b=0),
+        height=CHART_H_SECONDARY,
+        margin=CHART_MARGIN,
         xaxis_title="",
         yaxis_title="Tickets",
     )
@@ -252,14 +277,13 @@ if not ticket_df.empty and "created_at" in ticket_df.columns:
 
 st.divider()
 
-# ── Section 3: API Health Monitor ─────────────────────────────────────────────
-st.subheader("🔬 API Health Monitor")
+# ── Section 3: API Health ─────────────────────────────────────────────────────
+st.subheader("API Health")
 
 if not api_df.empty:
     col1, col2 = st.columns(2)
 
     with col1:
-        # Latency over time (successful calls only)
         success_df = api_df[api_df["success"] == 1].copy()
         if not success_df.empty:
             success_df["timestamp"] = pd.to_datetime(success_df["timestamp"])
@@ -268,72 +292,57 @@ if not api_df.empty:
                 success_df,
                 x="timestamp",
                 y="latency_ms",
-                title="API Latency Over Time (successful calls)",
-                color_discrete_sequence=["#6366f1"],
+                title="API Latency Over Time",
+                color_discrete_sequence=[COLORS["indigo"]],
                 opacity=0.6,
             )
             fig.add_hline(
                 y=success_df["latency_ms"].mean(),
                 line_dash="dash",
-                line_color="#f97316",
+                line_color=COLORS["warning"],
                 annotation_text=f"Mean: {success_df['latency_ms'].mean():.0f}ms",
             )
-            fig.update_layout(height=300, margin=dict(t=40, b=0))
+            fig.update_layout(height=CHART_H_PRIMARY, margin=CHART_MARGIN)
             st.plotly_chart(fig, use_container_width=True)
 
     with col2:
-        # Error type breakdown
         error_df = api_df[api_df["success"] == 0]
         if not error_df.empty:
             err_counts = error_df["error_type"].value_counts().reset_index()
             err_counts.columns = ["error_type", "count"]
-            error_colors = {
-                "rate_limit": "#f97316",
-                "server_error": "#ef4444",
-                "timeout": "#eab308",
-                "unknown": "#94a3b8",
-            }
             fig = px.bar(
                 err_counts,
                 x="error_type",
                 y="count",
                 title="API Errors by Type",
                 color="error_type",
-                color_discrete_map=error_colors,
+                color_discrete_map=ERROR_COLORS,
             )
             fig.update_layout(
-                height=300,
-                margin=dict(t=40, b=0),
+                height=CHART_H_PRIMARY,
+                margin=CHART_MARGIN,
                 showlegend=False,
                 xaxis_title="",
                 yaxis_title="Error Count",
             )
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.success("✅ No API errors recorded.")
+            st.success("No API errors recorded.")
 
-    # Status code distribution
     code_counts = api_df["status_code"].value_counts().reset_index()
     code_counts.columns = ["status_code", "count"]
     code_counts["status_code"] = code_counts["status_code"].astype(str)
-    code_colors = {
-        "200": "#22c55e",
-        "429": "#f97316",
-        "500": "#ef4444",
-        "408": "#eab308",
-        "0": "#94a3b8",
-    }
     fig = px.bar(
         code_counts,
         x="status_code",
         y="count",
         title="HTTP Status Code Distribution",
         color="status_code",
-        color_discrete_map=code_colors,
+        color_discrete_map=HTTP_COLORS,
     )
     fig.update_layout(
-        height=250,
-        margin=dict(t=40, b=0),
+        height=CHART_H_SECONDARY,
+        margin=CHART_MARGIN,
         showlegend=False,
         xaxis_title="HTTP Status Code",
         yaxis_title="Count",
@@ -342,30 +351,28 @@ if not api_df.empty:
 
 st.divider()
 
-# ── Section 4: Live Ticket Queue ──────────────────────────────────────────────
-st.subheader("📋 Ticket Queue")
+# ── Section 4: Ticket Queue ───────────────────────────────────────────────────
+st.subheader("Ticket Queue")
 
 if not ticket_df.empty:
     display_cols = ["ticket_id", "created_at", "customer", "subject", "priority", "status", "category", "sentiment", "ai_summary"]
     display_cols = [c for c in display_cols if c in ticket_df.columns]
     display_df = ticket_df[display_cols].copy()
 
-    # Colour-code priority
     def priority_badge(val):
-        colors = {
-            "critical": "background-color: #fee2e2; color: #991b1b; font-weight: bold",
-            "high": "background-color: #ffedd5; color: #9a3412",
-            "medium": "background-color: #fef9c3; color: #854d0e",
-            "low": "background-color: #dcfce7; color: #166534",
+        base = "border-radius: 3px; padding: 1px 6px; font-size: 0.75rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;"
+        badge = {
+            "critical": f"color: {COLORS['danger']}; border: 1px solid {COLORS['danger']}; {base}",
+            "high":     f"color: {COLORS['warning']}; border: 1px solid {COLORS['warning']}; {base}",
+            "medium":   f"color: #facc15; border: 1px solid #facc15; {base}",
+            "low":      f"color: {COLORS['success']}; border: 1px solid {COLORS['success']}; {base}",
         }
-        return colors.get(val, "")
+        return badge.get(val, "")
 
     styled = display_df.style.map(priority_badge, subset=["priority"])
-
     st.dataframe(styled, use_container_width=True, height=400)
 
-    # Ticket detail viewer
-    with st.expander("🔍 View ticket details"):
+    with st.expander("View ticket details"):
         ticket_ids = [t["ticket_id"] for t in filtered_tickets]
         selected_id = st.selectbox("Select ticket ID", options=ticket_ids)
         if selected_id:
@@ -383,20 +390,20 @@ if not ticket_df.empty:
                 st.write(f"**Subject:** {ticket['subject']}")
                 st.write(f"**Created:** {ticket['created_at']}")
                 if ticket.get("ai_summary"):
-                    st.info(f"🤖 **AI Summary:** {ticket['ai_summary']}")
+                    st.info(f"→ AI: {ticket['ai_summary']}")
                 st.text_area("Ticket Body", value=ticket["body"], height=200, disabled=True)
 
                 if ticket["status"] != "resolved":
-                    if st.button("✅ Mark as Resolved", type="primary"):
+                    if st.button("Mark as Resolved", type="primary"):
                         db.resolve_ticket(selected_id)
-                        st.success("Ticket resolved!")
+                        st.success("Ticket resolved.")
                         st.session_state.data_version += 1
                         st.rerun()
 
 st.divider()
 
 # ── Section 5: Raw API Logs ───────────────────────────────────────────────────
-with st.expander("📜 Raw API Logs (last 100 calls)"):
+with st.expander("Raw API Logs (last 100 calls)"):
     if not api_df.empty:
         st.dataframe(api_df.head(100), use_container_width=True, height=300)
     else:
