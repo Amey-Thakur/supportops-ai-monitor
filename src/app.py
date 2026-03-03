@@ -241,15 +241,43 @@ header[data-testid="stHeader"] {
 st.components.v1.html("""
 <script>
 (function(){
-  const msg = "> SupportOps Monitor\\nDesigned & Developed by Archit Konde\\nPortfolio: https://archit-konde.github.io/\\nGitHub: https://github.com/Archit-Konde/supportops-ai-monitor";
+  try {
+    const pc = window.parent.console;
+    setTimeout(() => {
+      pc.clear();
+      pc.log(
+        "%c %c SUPPORT OPS MONITOR %c v1.2 %c\\n" +
+        "%c—————————————————————————————————————————————————————————————————————\\n" +
+        "%cDesigned & Developed by Archit Konde\\n" +
+        "Portfolio: https://archit-konde.github.io/\\n" +
+        "GitHub:    https://github.com/Archit-Konde/supportops-ai-monitor\\n\\n" +
+        "%c[ PROJECT PHILOSOPHY ]%c\\n" +
+        "At the intersection of support operations and predictive intelligence lies \\n" +
+        "the future of customer success. This monitor is engineered to transform \\n" +
+        "raw ticket data into coherent operational narratives, ensuring that \\n" +
+        "efficiency never comes at the cost of the human experience.\\n\\n" +
+        "%c[ DEV TIP ]%c\\n" +
+        "Seniority in engineering isn't about complexity; it's about clarity. \\n" +
+        "Always optimize for the next developer who will read your code.\\n" +
+        "—————————————————————————————————————————————————————————————————————%c",
+        "background:#C9A84C; padding:5px 0;",
+        "background:#C9A84C; color:#1e1e1e; font-weight:bold; font-size:16px; padding:5px 10px; font-family:monospace;",
+        "background:#3e3e42; color:#C9A84C; font-size:12px; padding:5px 10px; font-family:monospace;",
+        "background:#C9A84C; padding:5px 0;",
+        "color:#666; font-size:12px; font-family:monospace;",
+        "color:#C9A84C; font-size:14px; font-weight:bold; font-family:monospace;",
+        "color:#C9A84C; font-weight:bold; font-size:12px; font-family:monospace;",
+        "color:#858585; font-size:12px; font-style:italic; font-family:monospace;",
+        "color:#C9A84C; font-weight:bold; font-size:12px; font-family:monospace;",
+        "color:#858585; font-size:12px; font-family:monospace;",
+        "color:#666; font-size:12px; font-family:monospace;"
+      );
+    }, 500);
+  } catch(e) {}
 
-  const style1 = "color:#C9A84C;font-size:20px;font-weight:bold;font-family:monospace;";
+
   try {
-    window.parent.console.log("%c" + msg, style1);
-  } catch(e) {
-    console.log("%c" + msg, style1);
-  }
-  try {
+
 
 
 
