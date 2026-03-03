@@ -241,7 +241,8 @@ header[data-testid="stHeader"] {
 st.components.v1.html("""
 <script>
 (function(){
-  const msg = "> SupportOps Monitor\\nDesigned & Developed by Archit Konde\\nhttps://archit-konde.github.io/";
+  const msg = "> SupportOps Monitor\\nDesigned & Developed by Archit Konde\\nPortfolio: https://archit-konde.github.io/\\nGitHub: https://github.com/Archit-Konde/supportops-ai-monitor";
+
   const style1 = "color:#C9A84C;font-size:20px;font-weight:bold;font-family:monospace;";
   try {
     window.parent.console.log("%c" + msg, style1);
