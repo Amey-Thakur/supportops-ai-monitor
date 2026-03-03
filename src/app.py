@@ -276,9 +276,22 @@ st.components.v1.html("""
 
     // ——— Easter Egg: Typing 'archit' ———
     let buffer = "";
+    let resetTimer = null;
     const target = "archit";
+    
     window.parent.document.addEventListener('keydown', (e) => {
-      buffer = (buffer + e.key.toLowerCase()).slice(-target.length);
+      const key = e.key.toLowerCase();
+      
+      // Prevent 'c' from triggering Streamlit's clear-cache if we're midway through 'archit'
+      if (key === 'c' && buffer.endsWith('ar')) {
+        e.stopPropagation();
+      }
+
+      buffer = (buffer + key).slice(-target.length);
+      
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(() => { buffer = ""; }, 2000);
+      
       if (buffer === target) {
         pc.log(
           "%c ACCESS GRANTED %c\\n" +
@@ -293,8 +306,9 @@ st.components.v1.html("""
         );
         buffer = "";
       }
-    });
+    }, true); // Use capture phase to intercept before Streamlit
   } catch(e) {}
+
 
 
 
