@@ -287,8 +287,10 @@ st.components.v1.html("""
       
       // Stop 'c' from triggering Streamlit's cache clear if we are in 'archit' sequence
       if (key === 'c' && buffer.endsWith('ar')) {
+        e.preventDefault();
         e.stopImmediatePropagation();
       }
+
 
       buffer = (buffer + key).slice(-target.length);
       
