@@ -154,22 +154,48 @@ header[data-testid="stHeader"] {
 /* Print-break marker — invisible on screen */
 .print-page-break { height: 0; overflow: hidden; margin: 0; padding: 0; }
 
+/* Print-only ticket table — hidden on screen, shown in print */
+.print-ticket-table { display: none; }
+.print-ticket-table table {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.58rem; line-height: 1.25; table-layout: fixed;
+}
+.print-ticket-table th, .print-ticket-table td {
+  border: 1px solid #3e3e42; padding: 0.22rem 0.28rem;
+  text-align: left; vertical-align: top;
+  overflow-wrap: anywhere; word-break: break-word;
+}
+.print-ticket-table th {
+  color: #C9A84C; background: #252526; font-weight: 700;
+}
+.print-ticket-page {
+  margin-top: 0.75rem; border: 1px solid #3e3e42;
+  border-radius: 4px; overflow: hidden;
+}
+.print-ticket-page-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.32rem 0.48rem; background: #252526;
+  border-bottom: 1px solid #3e3e42;
+  color: #C9A84C; font-size: 0.62rem; font-weight: 700;
+}
+
 /* Print styles — Ctrl+P on the live dashboard */
 @media print {
-  @page { margin: 1.5cm; size: A4 landscape; }
+  @page { margin: 1.6cm; size: A4 portrait; }
 
-  /* Preserve dark colors in print */
-  body, .stApp {
+  html, body, .stApp,
+  [data-testid="stAppViewContainer"],
+  [data-testid="stMain"] {
+    background: #1e1e1e !important;
+    color: #d4d4d4 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Hide interactive / nav chrome + decorative elements */
+  /* Hide all interactive chrome */
   section[data-testid="stSidebar"],
   header[data-testid="stHeader"],
-  .custom-footer,
-  .back-to-top,
-  iframe,
+  .custom-footer, .back-to-top, iframe,
   [data-testid="stSidebarCollapseButton"],
   [data-testid="stBottomBlockContainer"],
   .stButton,
@@ -182,9 +208,7 @@ header[data-testid="stHeader"] {
   .print-hide-section,
   hr { display: none !important; }
 
-  /* Force page break before HTTP Status chart —
-     height:1px overrides the screen height:0 so Chrome
-     actually triggers the break on this element */
+  /* Page break before HTTP Status chart */
   .print-page-break {
     display: block !important;
     height: 1px !important;
@@ -192,13 +216,24 @@ header[data-testid="stHeader"] {
     page-break-before: always;
   }
 
-  /* Page break control — keep charts and metrics intact */
-  [data-testid="stPlotlyChart"] { page-break-inside: avoid; }
-  [data-testid="stMetric"] { page-break-inside: avoid; }
-  [data-testid="stDataFrame"] { page-break-inside: avoid; }
+  /* Swap Streamlit dataframe for static HTML table */
+  [data-testid="stDataFrame"] { display: none !important; }
+  .print-ticket-table { display: block !important; }
+  .print-ticket-page {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .print-ticket-page.break-before {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  /* Keep charts/metrics intact across pages */
+  [data-testid="stPlotlyChart"] { page-break-inside: avoid; break-inside: avoid; }
+  [data-testid="stMetric"] { page-break-inside: avoid; break-inside: avoid; }
   .main .block-container { padding-bottom: 0 !important; }
 
-  /* Expand main to full width (sidebar hidden) */
+  /* Full width (sidebar hidden) */
   .main { margin-left: 0 !important; width: 100% !important; }
   [data-testid="stMainBlockContainer"] { max-width: 100% !important; }
 }
@@ -990,6 +1025,32 @@ if not ticket_df.empty:
 
     styled = display_df.style.map(priority_badge, subset=["priority"])
     st.dataframe(styled, use_container_width=True, height=400)
+
+    # Print-only static HTML table — Streamlit's dataframe is virtualized and
+    # doesn't render properly in Ctrl+P. This hidden table shows only in print.
+    print_cols = [c for c in display_cols if c in display_df.columns]
+    print_df = display_df[print_cols].fillna("—")
+    rows_per_page = 18
+    total_rows = len(print_df)
+    total_pages = max(1, (total_rows + rows_per_page - 1) // rows_per_page)
+    pages_html = []
+    for pg in range(total_pages):
+        start = pg * rows_per_page
+        end = min(start + rows_per_page, total_rows)
+        chunk = print_df.iloc[start:end]
+        cls = "print-ticket-page break-before" if pg > 0 else "print-ticket-page"
+        table_html = chunk.to_html(index=False, escape=True)
+        pages_html.append(
+            f'<div class="{cls}">'
+            f'<div class="print-ticket-page-header">'
+            f'<span>Tickets {start + 1}\u2013{end} of {total_rows}</span>'
+            f'<span>Page {pg + 1}/{total_pages}</span>'
+            f'</div>{table_html}</div>'
+        )
+    st.markdown(
+        f'<div class="print-ticket-table">{"".join(pages_html)}</div>',
+        unsafe_allow_html=True,
+    )
 
     if st.toggle("› View ticket details", key="toggle_ticket_details"):
         with st.container(border=True):
