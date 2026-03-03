@@ -196,9 +196,9 @@ header[data-testid="stHeader"] {
 
   /* 4. KPI Metrics - Keep them simple and bold */
   [data-testid="metric-container"] {
-    background: #fcfcfc !important;
-    border: 1px solid #eeeeee !important;
-    margin-bottom: 10px !important;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    margin-bottom: 10px;
   }
   [data-testid="stMetricValue"] { color: #C9A84C !important; font-weight: 800 !important; }
   [data-testid="stMetricLabel"] { color: #333333 !important; }
@@ -246,7 +246,7 @@ st.components.v1.html("""
     setTimeout(() => {
       pc.clear();
       pc.log(
-        "%c %c SUPPORT OPS MONITOR %c v1.2 %c\\n" +
+        "%c %c > SupportOps AI Monitor %c\\n" +
         "%c—————————————————————————————————————————————————————————————————————\\n" +
         "%cDesigned & Developed by Archit Konde\\n" +
         "Portfolio: https://archit-konde.github.io/\\n" +
@@ -262,7 +262,6 @@ st.components.v1.html("""
         "—————————————————————————————————————————————————————————————————————%c",
         "background:#C9A84C; padding:5px 0;",
         "background:#C9A84C; color:#1e1e1e; font-weight:bold; font-size:16px; padding:5px 10px; font-family:monospace;",
-        "background:#3e3e42; color:#C9A84C; font-size:12px; padding:5px 10px; font-family:monospace;",
         "background:#C9A84C; padding:5px 0;",
         "color:#666; font-size:12px; font-family:monospace;",
         "color:#C9A84C; font-size:14px; font-weight:bold; font-family:monospace;",
@@ -272,6 +271,7 @@ st.components.v1.html("""
         "color:#858585; font-size:12px; font-family:monospace;",
         "color:#666; font-size:12px; font-family:monospace;"
       );
+
     }, 500);
   } catch(e) {}
 
