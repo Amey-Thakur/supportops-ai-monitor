@@ -98,8 +98,13 @@ footer { visibility: hidden !important; }
   { color: #C9A84C !important; }
 /* Hide Streamlit header anchor icon */
 [data-testid="StyledLinkIconContainer"] { display: none !important; }
-/* Fix Material Icon ligatures showing as literal text */
+/* Fix Material Icon ligatures showing as literal text — load font + fallback */
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 [data-testid="stSidebarCollapseButton"] span { font-size: 0 !important; }
+details summary > div > span:first-child { font-size: 0 !important; }
+/* Hide Streamlit top bar (Rerun / Settings / Made with Streamlit) */
+header[data-testid="stHeader"] { display: none !important; }
+#MainMenu { display: none !important; }
 /* Fix upload widget text clipping in narrow sidebar */
 [data-testid="stFileUploader"] label,
 [data-testid="stFileUploader"] span
@@ -141,13 +146,37 @@ st.markdown("""
 .back-to-top.visible { opacity: 1; visibility: visible; transform: translateY(0); }
 .back-to-top:hover { background: #C9A84C; border-color: #C9A84C; color: #1e1e1e; }
 </style>
-<a href="#" class="back-to-top" id="backToTop" title="Back to top"
-   onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">&#8593;</a>
+<a href="#" class="back-to-top" id="backToTop" title="Back to top">&#8593;</a>
 <script>
 (function(){
-  var btn=document.getElementById('backToTop');
-  if(!btn)return;
-  window.addEventListener('scroll',function(){btn.classList.toggle('visible',window.scrollY>400);});
+  var btn = document.getElementById('backToTop');
+  if (!btn) return;
+
+  function getContainer() {
+    return document.querySelector('[data-testid="stMainBlockContainer"]') || window;
+  }
+
+  function onScroll() {
+    var c = getContainer();
+    var top = (c === window) ? window.scrollY : c.scrollTop;
+    btn.classList.toggle('visible', top > 400);
+  }
+
+  // Listen on window as fallback (capture phase catches all scroll events)
+  window.addEventListener('scroll', onScroll, true);
+
+  // Poll until Streamlit's main container mounts, then attach directly
+  var poll = setInterval(function() {
+    var c = document.querySelector('[data-testid="stMainBlockContainer"]');
+    if (c) { c.addEventListener('scroll', onScroll); clearInterval(poll); }
+  }, 300);
+
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    var c = getContainer();
+    if (c === window) { window.scrollTo({top:0,behavior:'smooth'}); }
+    else              { c.scrollTo({top:0,behavior:'smooth'}); }
+  });
 })();
 </script>
 """, unsafe_allow_html=True)
@@ -162,6 +191,103 @@ def _term(cmd):
         f'<span style="color:#C9A84C;font-weight:600;">$</span> {cmd}</p>',
         unsafe_allow_html=True,
     )
+
+# ── HTML Report generator ─────────────────────────────────────────────────────
+def _build_html_report(all_tix: list, t_stats: dict, a_stats: dict) -> str:
+    """Return a self-contained HTML string. Open in browser → Ctrl+P → Save as PDF."""
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+    # KPI block
+    kpis_html = "".join(
+        f'<div class="kpi"><div class="kv">{v}</div><div class="kl">{lbl}</div></div>'
+        for v, lbl in [
+            (t_stats.get("total", 0),              "Total Tickets"),
+            (t_stats.get("open", 0),               "Open"),
+            (t_stats.get("resolved", 0),           "Resolved"),
+            (f"{a_stats.get('success_rate', 0)}%", "API Success Rate"),
+            (f"{a_stats.get('avg_latency_ms', 0)} ms", "Avg Latency"),
+        ]
+    )
+
+    # Category / priority breakdown rows
+    def _rows(d):
+        return "".join(f"<tr><td>{k}</td><td>{v}</td></tr>" for k, v in d.items())
+
+    # Recent tickets table (top 50)
+    ticket_rows = "".join(
+        f"<tr>"
+        f"<td>{t.get('ticket_id','')}</td>"
+        f"<td>{t.get('customer','')}</td>"
+        f"<td>{str(t.get('subject',''))[:70]}</td>"
+        f"<td>{t.get('priority','')}</td>"
+        f"<td>{t.get('status','')}</td>"
+        f"<td>{t.get('category') or '—'}</td>"
+        f"<td>{t.get('sentiment') or '—'}</td>"
+        f"<td>{str(t.get('ai_summary') or '—')[:80]}</td>"
+        f"</tr>"
+        for t in all_tix[:50]
+    )
+
+    error_rows = _rows(a_stats.get("errors_by_type", {})) or "<tr><td colspan='2'>None</td></tr>"
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SupportOps AI Monitor — {now}</title>
+<style>
+  body{{font-family:'Courier New',monospace;background:#fff;color:#1e1e1e;
+       max-width:1200px;margin:0 auto;padding:2rem;font-size:13px;}}
+  h1{{border-bottom:3px solid #C9A84C;padding-bottom:.4rem;font-size:1.4rem;}}
+  h2{{font-size:.9rem;color:#555;margin:1.8rem 0 .4rem;text-transform:uppercase;letter-spacing:.05em;}}
+  .meta{{color:#888;font-size:.75rem;margin-bottom:1.5rem;}}
+  .kpis{{display:flex;flex-wrap:wrap;gap:.75rem;margin:1rem 0 1.5rem;}}
+  .kpi{{border:1px solid #ddd;padding:.8rem 1.2rem;min-width:110px;}}
+  .kv{{font-size:1.6rem;font-weight:700;color:#C9A84C;}}
+  .kl{{font-size:.7rem;color:#888;margin-top:.1rem;}}
+  table{{border-collapse:collapse;width:100%;margin-top:.5rem;}}
+  th{{background:#f4f4f4;padding:.35rem .55rem;text-align:left;border:1px solid #ddd;font-size:.75rem;}}
+  td{{padding:.3rem .55rem;border:1px solid #eee;font-size:.75rem;vertical-align:top;}}
+  tr:nth-child(even){{background:#fafafa;}}
+  @media print{{body{{padding:.5rem;}}}}
+</style>
+</head>
+<body>
+<h1>&gt; SupportOps AI Monitor</h1>
+<p class="meta">Generated: {now} &nbsp;·&nbsp; Tickets shown: {min(len(all_tix),50)} of {len(all_tix)}</p>
+
+<h2>Key Metrics</h2>
+<div class="kpis">{kpis_html}</div>
+
+<h2>Tickets by Category</h2>
+<table><tr><th>Category</th><th>Count</th></tr>{_rows(t_stats.get('by_category', {}))}</table>
+
+<h2>Tickets by Priority</h2>
+<table><tr><th>Priority</th><th>Count</th></tr>{_rows(t_stats.get('by_priority', {}))}</table>
+
+<h2>Tickets by Sentiment</h2>
+<table><tr><th>Sentiment</th><th>Count</th></tr>{_rows(t_stats.get('by_sentiment', {}))}</table>
+
+<h2>API Health</h2>
+<table>
+  <tr><th>Metric</th><th>Value</th></tr>
+  <tr><td>Total API Calls</td><td>{a_stats.get('total_calls', 0)}</td></tr>
+  <tr><td>Success Rate</td><td>{a_stats.get('success_rate', 0)}%</td></tr>
+  <tr><td>Avg Latency</td><td>{a_stats.get('avg_latency_ms', 0)} ms</td></tr>
+</table>
+
+<h2>API Errors by Type</h2>
+<table><tr><th>Error Type</th><th>Count</th></tr>{error_rows}</table>
+
+<h2>Recent Tickets (Top 50)</h2>
+<table>
+  <tr><th>ID</th><th>Customer</th><th>Subject</th><th>Priority</th>
+      <th>Status</th><th>Category</th><th>Sentiment</th><th>AI Summary</th></tr>
+  {ticket_rows}
+</table>
+</body>
+</html>"""
+
 
 # ── Init DB ───────────────────────────────────────────────────────────────────
 db.init_db()
@@ -312,10 +438,7 @@ with st.sidebar:
 
     # ── Export + Reset ─────────────────────────────────────────────────────────
     st.subheader("Export")
-    if st.button("Save Report as PDF", use_container_width=True):
-        st.components.v1.html(
-            "<script>window.parent.print();</script>", height=0,
-        )
+    st.caption("// HTML report download available below the dashboard")
 
     st.divider()
 
@@ -327,13 +450,10 @@ with st.sidebar:
         c1, c2 = st.columns(2)
         with c1:
             if st.button("Confirm", type="primary", use_container_width=True):
-                result = db.clear_all_data()
-                st.success(
-                    f"Cleared {result['tickets']} tickets, "
-                    f"{result['logs']} API logs."
-                )
+                db.clear_all_data()
+                st.cache_data.clear()
+                st.session_state.data_version = 0
                 st.session_state.pop("confirm_reset", None)
-                st.session_state.data_version += 1
                 st.rerun()
         with c2:
             if st.button("Cancel", use_container_width=True):
@@ -617,3 +737,23 @@ with st.expander("$ tail -f api.log (last 100 calls)"):
         st.dataframe(api_df.head(100), use_container_width=True, height=300)
     else:
         st.write("No API logs yet.")
+
+st.divider()
+
+# ── Section 6: Export ─────────────────────────────────────────────────────────
+_term("export --format html")
+if all_tickets:
+    _report_stats  = load_ticket_stats(st.session_state.data_version)
+    _report_api    = load_api_health_stats(st.session_state.data_version) if api_logs else {}
+    _report_html   = _build_html_report(all_tickets, _report_stats, _report_api)
+    st.download_button(
+        label="⬇ Download Report (HTML)",
+        data=_report_html,
+        file_name=f"supportops-report-{datetime.now().strftime('%Y%m%d-%H%M')}.html",
+        mime="text/html",
+        use_container_width=True,
+        help="Open the downloaded file in your browser, then Ctrl+P → Save as PDF.",
+    )
+    st.caption("// open in browser → Ctrl+P → Save as PDF for a clean printout")
+else:
+    st.caption("// generate tickets first to enable report download")
