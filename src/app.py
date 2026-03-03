@@ -72,6 +72,27 @@ h1,h2,h3,h4,h5,h6, p, span, div, label, input, textarea,
 code, pre, .stCode, [data-testid="stCodeBlock"],
 .streamlit-expanderHeader
   { font-family: 'JetBrains Mono', monospace !important; }
+/* Restore Material icon fonts — the global monospace override above
+   clobbers Streamlit's icon font on span/div elements. */
+.material-icons,
+.material-icons-round,
+.material-icons-outlined,
+.material-symbols-rounded,
+.material-symbols-outlined,
+[class*="material-symbols"],
+[class*="material-icons"],
+[data-testid="stSidebarCollapseButton"] span,
+[data-testid="stSidebarCollapseButton"] button span,
+[data-testid="collapsedControl"] span,
+[data-testid="collapsedControl"] button span {
+  font-family: 'Material Symbols Rounded', 'Material Symbols Outlined',
+               'Material Icons', 'Material Icons Round', 'Material Icons Outlined' !important;
+  font-weight: normal !important;
+  font-style: normal !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  white-space: nowrap !important;
+}
 .stApp { background-color: #1e1e1e !important; }
 section[data-testid="stSidebar"]
   { background-color: #252526 !important; border-right: 1px solid #3e3e42 !important; }
@@ -120,9 +141,9 @@ header[data-testid="stHeader"] {
   -webkit-backdrop-filter: none !important;
 }
 #MainMenu { display: none !important; }
-/* Sidebar collapse/expand — style the icon to match our theme */
+/* Sidebar collapse/expand — theme the icon color */
 [data-testid="stSidebarCollapseButton"] button,
-[data-testid="collapsedControl"] button { color: #C9A84C !important; }
+[data-testid="collapsedControl"] button { color: #858585 !important; }
 /* Fix upload widget text clipping in narrow sidebar */
 [data-testid="stFileUploader"] label,
 [data-testid="stFileUploader"] span
