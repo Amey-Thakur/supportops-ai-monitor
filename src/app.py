@@ -561,7 +561,15 @@ def load_api_health_stats(version):
 if "data_version" not in st.session_state:
     st.session_state.data_version = 0
 
+# ── Load data (Move up to use in sidebar) ─────────────────────────────────────
+all_tickets = load_all_tickets(st.session_state.data_version)
+api_logs = load_api_logs(st.session_state.data_version, limit=500)
+
+_report_stats  = load_ticket_stats(st.session_state.data_version) if all_tickets else {}
+_report_api    = load_api_health_stats(st.session_state.data_version) if api_logs else {}
+
 # ── Sidebar ───────────────────────────────────────────────────────────────────
+
 with st.sidebar:
     st.markdown("**> SupportOps AI Monitor**")
     st.caption("// AI Platform · Support Operations")
@@ -689,6 +697,24 @@ with st.sidebar:
 
     # ── Export + Reset ─────────────────────────────────────────────────────────
     st.subheader("Export")
+    
+    if all_tickets:
+        with st.spinner("Preparing..."):
+            _sidebar_pdf = _build_pdf_report(all_tickets, api_logs, _report_stats, _report_api)
+        
+        if _sidebar_pdf:
+            st.download_button(
+                label="⬇ Download PDF Report",
+                data=_sidebar_pdf,
+                file_name=f"supportops-report-{datetime.now().strftime('%Y%m%d-%H%M')}.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+                key="sidebar_download_pdf"
+            )
+
+    else:
+        st.caption("Generate tickets to export")
+
 
 
     st.divider()
@@ -712,10 +738,8 @@ with st.sidebar:
                 st.rerun()
 
 # ── Load data ─────────────────────────────────────────────────────────────────
-all_tickets = load_all_tickets(st.session_state.data_version)
-api_logs = load_api_logs(st.session_state.data_version, limit=500)
-
 # Apply filters
+
 filtered_tickets = [
     t for t in all_tickets
     if t["status"] in status_filter and t["priority"] in priority_filter
