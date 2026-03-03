@@ -98,10 +98,32 @@ footer { visibility: hidden !important; }
   { color: #C9A84C !important; }
 /* Hide Streamlit header anchor icon */
 [data-testid="StyledLinkIconContainer"] { display: none !important; }
-/* Fix Material Icon ligatures showing as literal text — load font + fallback */
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
-[data-testid="stSidebarCollapseButton"] span { font-size: 0 !important; }
-details summary > div > span:first-child { font-size: 0 !important; }
+/* Hide broken Material Icon ligature text ("arrow_right") in expanders.
+   @import can't load the font mid-stylesheet, so hide the icon span entirely
+   and replace with a pure-CSS arrow via ::before on the summary. */
+[data-testid="stExpanderToggleIcon"],
+[data-testid="stSidebarCollapseButton"] span,
+details summary svg,
+details summary > div > span:first-child {
+  display: none !important;
+  font-size: 0 !important;
+  width: 0 !important;
+  overflow: hidden !important;
+}
+/* Add a clean > arrow that rotates when expanded */
+details summary::before {
+  content: "›";
+  display: inline-block;
+  color: #C9A84C;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-right: 0.4rem;
+  transition: transform 0.2s ease;
+  font-family: 'JetBrains Mono', monospace;
+}
+details[open] summary::before {
+  transform: rotate(90deg);
+}
 /* Hide Streamlit top bar (Rerun / Settings / Made with Streamlit) */
 header[data-testid="stHeader"] { display: none !important; }
 #MainMenu { display: none !important; }
