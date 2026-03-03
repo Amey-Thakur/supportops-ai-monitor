@@ -173,7 +173,7 @@ header[data-testid="stHeader"] {
   [data-testid="stSidebarCollapseButton"],
   [data-testid="stBottomBlockContainer"],
   .stButton,
-  [data-testid="stToggle"],
+  [data-testid="stCheckbox"],
   [data-testid="stFileUploader"],
   [data-testid="stSlider"],
   [data-testid="stSelectbox"],
@@ -182,9 +182,12 @@ header[data-testid="stHeader"] {
   .print-hide-section,
   hr { display: none !important; }
 
-  /* Force page break before HTTP Status chart */
+  /* Force page break before HTTP Status chart —
+     height:1px overrides the screen height:0 so Chrome
+     actually triggers the break on this element */
   .print-page-break {
     display: block !important;
+    height: 1px !important;
     break-before: page;
     page-break-before: always;
   }
