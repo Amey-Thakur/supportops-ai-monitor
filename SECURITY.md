@@ -16,8 +16,8 @@ Only the primary branch of the repository is formally recognized as the authorit
 
 In alignment with professional standards for software security disclosure, security-related observations should be formally recorded to ensure the platform's technical integrity remains documented.
 
-If you identify a security concern, please communicate it to the project curator:
-  - **Curator**: [Archit Konde](https://github.com/Archit-Konde)
+If you identify a security concern, please communicate it to the project developer:
+  - **Developer**: [Archit Konde](https://github.com/Archit-Konde)
   - **Method**: Submit a detailed report via the repository’s [GitHub Issues](https://github.com/Archit-Konde/supportops-ai-monitor/issues) interface to establish a formal record.
 
 **Submission Guidelines**:
@@ -36,7 +36,7 @@ This project executes within a specialized operations environment, integrating A
 
 ## Technical Integrity Statement
 
-This repository is preserved as a fixed engineering project. Security-related reports are accepted for documentation and contextual study. However, this repository is not under active commercial support, and submissions do not obligate the curator to perform immediate patches or architectural modifications.
+This repository is preserved as a fixed engineering project. Security-related reports are accepted for documentation and contextual study. However, this repository is not under active commercial support, and submissions do not obligate the developer to perform immediate patches or architectural modifications.
 
 ---
 
