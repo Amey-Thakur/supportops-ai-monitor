@@ -448,11 +448,12 @@ def _build_pdf_report(all_tix: list, api_logs_raw: list, t_stats: dict, a_stats:
         </table>
 
         <div class="footer">
-            &copy; 2026 SupportOps AI Monitor. Confidential Performance Report.
+            &copy; 2026 All rights reserved. Designed & Developed by <a href="https://archit-konde.github.io/">Archit Konde</a>
         </div>
     </body>
     </html>
     """
+
 
     
     pdf_buffer = io.BytesIO()
