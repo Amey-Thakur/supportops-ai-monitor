@@ -542,13 +542,23 @@ hr{{border:none; border-top:1px solid var(--border); margin:1rem 0;}}
 /* ── Print ───────────────────────────────────── */
 @media print{{
   @page{{margin:1.2cm; size:A4 landscape;}}
-  body{{
-    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  html,body{{
+    -webkit-print-color-adjust:exact!important;
+    print-color-adjust:exact!important;
+    background:var(--bg)!important; color:var(--text)!important;
     padding:.5rem;
   }}
-  .charts-3col,.charts-2col,.chart-full,.kpis{{page-break-inside:avoid;}}
-  .ticket-section{{page-break-before:always;}}
-  .chart-cell,.tbl-wrap,.kpi{{page-break-inside:avoid;}}
+  /* Preserve backgrounds on all elements */
+  *{{-webkit-print-color-adjust:exact!important; print-color-adjust:exact!important;}}
+  /* Keep chart/KPI groups together */
+  .charts-3col,.charts-2col,.chart-full,.kpis{{page-break-inside:avoid; break-inside:avoid;}}
+  .chart-cell,.tbl-wrap,.kpi{{page-break-inside:avoid; break-inside:avoid;}}
+  /* Ticket section on new page */
+  .ticket-section{{page-break-before:always; break-before:page;}}
+  /* Repeat table headers on each printed page */
+  thead{{display:table-header-group;}}
+  tbody{{display:table-row-group;}}
+  tr{{page-break-inside:avoid; break-inside:avoid;}}
 }}
 </style>
 </head>
@@ -599,9 +609,9 @@ hr{{border:none; border-top:1px solid var(--border); margin:1rem 0;}}
 <div class="ticket-section">
 <div class="s-label">ls tickets/ --top 50</div>
 <div class="tbl-wrap"><table>
-  <tr><th>ID</th><th>Customer</th><th>Subject</th><th>Priority</th>
-      <th>Status</th><th>Category</th><th>Sentiment</th><th>AI Summary</th></tr>
-  {ticket_rows}
+  <thead><tr><th>ID</th><th>Customer</th><th>Subject</th><th>Priority</th>
+      <th>Status</th><th>Category</th><th>Sentiment</th><th>AI Summary</th></tr></thead>
+  <tbody>{ticket_rows}</tbody>
 </table></div>
 </div>
 
