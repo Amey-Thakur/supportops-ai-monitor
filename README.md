@@ -45,12 +45,13 @@ pinned: false
 The platform implements a multi-stage data pipeline where tickets are generated, classified by GPT-4o-mini (or a statistically faithful simulation engine), persisted in SQLite, and rendered through an interactive Streamlit dashboard with Plotly visualisations.
 
 > [!IMPORTANT]
-> ### Zero-Cost Demonstration
-> The entire system runs in **simulation mode** with no API key required. Every chart, metric, and operational insight is generated from a realistic data pipeline that models enterprise-scale support workflows. The simulation engine produces data that is statistically indistinguishable from live API calls.
+> ### No API Key Needed
+> The dashboard works out of the box. A built-in simulation engine generates realistic triage results — latency curves, error distributions, and classification outputs — so you can explore every feature without provisioning an OpenAI key.
 
 > [!NOTE]
-> ### Operational Intelligence
-> SupportOps AI Monitor is not a toy dashboard. It models real-world patterns — Gaussian latency distributions, realistic error rates, multi-category ticket classification, and sentiment analysis — to provide a faithful representation of how production support systems behave under load.
+> ### Beyond a Demo
+> This isn't a mock-up. The simulation models Gaussian latency (μ 820ms), a 10% error rate across three failure types, and multi-category sentiment classification — mirroring how a production triage pipeline actually behaves.
+
 
 ---
 
