@@ -241,13 +241,16 @@ header[data-testid="stHeader"] {
 st.components.v1.html("""
 <script>
 (function(){
-  console.log(
-    "%c> SupportOps Monitor%c\nDesigned & Developed by Archit Konde\n%chttps://archit-konde.github.io/",
-    "color: #C9A84C; font-size: 20px; font-weight: bold; font-family: monospace;",
-    "color: #858585; font-size: 14px; font-family: monospace;",
-    "color: #C9A84C; text-decoration: underline; font-family: monospace;"
-  );
+  const msg = "> SupportOps Monitor\\nDesigned & Developed by Archit Konde\\nhttps://archit-konde.github.io/";
+  const style1 = "color:#C9A84C;font-size:20px;font-weight:bold;font-family:monospace;";
   try {
+    window.parent.console.log("%c" + msg, style1);
+  } catch(e) {
+    console.log("%c" + msg, style1);
+  }
+  try {
+
+
 
     var doc = window.parent.document;
     var btn = doc.getElementById('backToTop');
