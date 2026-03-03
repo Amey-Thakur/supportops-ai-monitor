@@ -272,42 +272,48 @@ st.components.v1.html("""
         "color:#666; font-size:12px; font-family:monospace;"
       );
 
-    }, 500);
+    }, 1000);
+
 
     // ——— Easter Egg: Typing 'archit' ———
     let buffer = "";
     let resetTimer = null;
     const target = "archit";
-    
-    window.parent.document.addEventListener('keydown', (e) => {
-      const key = e.key.toLowerCase();
+    const pcRef = window.parent.console || console;
+
+    const handler = (e) => {
+      const key = e.key ? e.key.toLowerCase() : "";
+      if (!key || key.length > 1) return; // Ignore special keys like Shift
       
-      // Prevent 'c' from triggering Streamlit's clear-cache if we're midway through 'archit'
+      // Stop 'c' from triggering Streamlit's cache clear if we are in 'archit' sequence
       if (key === 'c' && buffer.endsWith('ar')) {
-        e.stopPropagation();
+        e.stopImmediatePropagation();
       }
 
       buffer = (buffer + key).slice(-target.length);
       
       clearTimeout(resetTimer);
-      resetTimer = setTimeout(() => { buffer = ""; }, 2000);
+      resetTimer = setTimeout(() => { buffer = ""; }, 3000); // 3s window
       
       if (buffer === target) {
-        pc.log(
+        pcRef.log(
           "%c ACCESS GRANTED %c\\n" +
           "—————————————————————————————————————————————————————————————————————\\n" +
           "ID: ARCHIT KONDE | ROLE: LEAD ARCHITECT\\n" +
           "STATUS: SYSTEM BYPASS ACTIVE | CLEARANCE: LEVEL 10 (OMEGA)\\n\\n" +
-          "The SupportOps infrastructure is operating under peak efficiency. \\n" +
-          "Intelligence cores synchronized. Operational narrativization active.\\n" +
+          "SupportOps Core: ONLINE | Intelligence Matrix: SYNCHRONIZED\\n" +
           "—————————————————————————————————————————————————————————————————————",
           "background:#4CAF50; color:white; font-weight:bold; font-size:14px; padding:2px 5px; border-radius:2px; font-family:monospace;",
           "color:#4CAF50; font-weight:bold; font-family:monospace;"
         );
         buffer = "";
       }
-    }, true); // Use capture phase to intercept before Streamlit
+    };
+
+    window.parent.addEventListener('keydown', handler, true);
+    window.parent.document.addEventListener('keydown', handler, true);
   } catch(e) {}
+
 
 
 
