@@ -155,7 +155,7 @@ header[data-testid="stHeader"] {
 /* Minimal print fallback — hides chrome if user hits Ctrl+P on dashboard.
    For a proper PDF, use the Download PDF Report button instead. */
 @media print {
-  /* 1. Hide UI Clutter */
+  /* 1. Hide UI elements */
   section[data-testid="stSidebar"],
   header[data-testid="stHeader"],
   .custom-footer, .back-to-top, iframe,
@@ -165,11 +165,10 @@ header[data-testid="stHeader"] {
   .stButton, .stCheckbox, .stToggle, .stDownloadButton,
   #MainMenu, footer, .stSpinner, .stMetricDelta { display: none !important; }
 
-  /* 2. Absolute White Theme Force */
+  /* 2. Base Page Reset */
   html, body, .stApp, .main, .stAppViewContainer, .stAppMain, 
   [data-testid="stAppViewContainer"], [data-testid="stMainBlockContainer"] {
     background-color: white !important;
-    background: white !important;
     color: black !important;
   }
   
@@ -179,80 +178,56 @@ header[data-testid="stHeader"] {
     margin: 0 !important;
   }
 
-  /* 3. Text Clarity & Headers */
+  /* 3. Headers and Terminal Cmds */
   h1, h2, h3, h4, h5, h6, p, span, div, label, .term-cmd { 
-    color: #111111 !important; 
+    color: black !important; 
     background-color: transparent !important;
     text-shadow: none !important;
   }
   
   .term-cmd {
     border-bottom: 2px solid #C9A84C !important;
-    padding-bottom: 5px !important;
-    margin: 2.5rem 0 1rem 0 !important;
-    font-weight: bold !important;
-    font-size: 1rem !important;
+    padding-bottom: 4px !important;
+    margin: 2rem 0 0.5rem 0 !important;
+    font-weight: 700 !important;
   }
   .term-cmd span { color: #C9A84C !important; }
 
-  /* 4. Metric Cards Clarity */
+  /* 4. KPI Metrics - Keep them simple and bold */
   [data-testid="metric-container"] {
-    background: #ffffff !important;
-    border: 1px solid #dddddd !important;
-    padding: 15px !important;
+    background: #fcfcfc !important;
+    border: 1px solid #eeeeee !important;
+    margin-bottom: 10px !important;
   }
   [data-testid="stMetricValue"] { color: #C9A84C !important; font-weight: 800 !important; }
   [data-testid="stMetricLabel"] { color: #333333 !important; }
 
-  /* 5. Chart Clarity (NO INVERSION- it makes fonts gray) */
-  /* Instead, we set a white background for the charts */
-  div[data-testid="stPlotlyChart"], .stPlotlyChart {
-    background: white !important;
-    border: 1px solid #f0f0f0 !important;
+  /* 5. Charts & DataFrames - THE FIX */
+  /* We use invert(1) hue-rotate(180deg) to flip the dark theme to light theme
+     for these specific complex components while preserving colors. */
+  [data-testid="stPlotlyChart"], [data-testid="stDataFrame"] {
+    filter: invert(1) hue-rotate(180deg) contrast(0.9) brightness(1.1) !important;
+    background-color: transparent !important;
     margin-bottom: 2rem !important;
     page-break-inside: avoid !important;
+    display: block !important;
   }
   
-  /* 6. High-Contrast Tables & DataFrames */
-  /* Remove inversion filters from tables */
-  .stDataFrame, [data-testid="stTable"], table, 
-  [data-testid="stDataFrame"] div, [data-testid="stDataFrame"] canvas {
-    filter: none !important;
+  /* Ensure the surrounding container doesn't have a dark background */
+  .element-container, .stPlotlyChart, .stDataFrame {
     background-color: white !important;
-    background: white !important;
-    color: black !important;
   }
 
-  /* Reset all table cells to be readable */
-  table, th, td {
-    color: black !important;
-    background: white !important;
-    border: 1px solid #eeeeee !important;
-  }
-  
-  th { 
-    background-color: #f8f9fa !important; 
-    color: black !important; 
-    font-weight: 700 !important; 
-    padding: 10px !important;
-  }
-  
-  td { 
-    padding: 8px !important; 
-    color: #222222 !important; 
-  }
-
-  /* 7. Final Polish */
+  /* 6. General Cleanup */
   * { 
     -webkit-print-color-adjust: exact !important; 
     print-color-adjust: exact !important;
-    box-shadow: none !important;
   }
   
   hr { display: none !important; }
-  .element-container { margin-bottom: 1.5rem !important; }
 }
 </style>
+
 
 
 
