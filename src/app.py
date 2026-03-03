@@ -49,6 +49,19 @@ PLOTLY_CONFIG     = {"displaylogo": False,
                      "modeBarButtonsToRemove": ["select2d", "lasso2d", "autoScale2d"]}
 
 # ── Global CSS — VS Code Dark+ terminal aesthetic ─────────────────────────────
+# Load Material Symbols font so Streamlit's icon ligatures render as icons
+# instead of literal text like "keyboard_double_arrow_right".
+# <link> tags are NOT stripped by st.markdown (unlike <script>).
+st.markdown(
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family='
+    'Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />'
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family='
+    'Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />'
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family='
+    'Material+Icons|Material+Icons+Round|Material+Icons+Outlined" />',
+    unsafe_allow_html=True,
+)
+
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
@@ -107,21 +120,9 @@ header[data-testid="stHeader"] {
   -webkit-backdrop-filter: none !important;
 }
 #MainMenu { display: none !important; }
-/* Sidebar collapse button — hide "keyboard_double_arrow_left" ligature text,
-   replace with a simple « character via CSS */
-[data-testid="stSidebarCollapseButton"] span,
-[data-testid="stSidebarCollapseButton"] svg {
-  font-size: 0 !important;
-  width: 0 !important;
-  overflow: hidden !important;
-  display: none !important;
-}
-[data-testid="stSidebarCollapseButton"] button::after {
-  content: "\00AB";  /* « character */
-  font-size: 1.2rem;
-  color: #C9A84C;
-  font-family: 'JetBrains Mono', monospace;
-}
+/* Sidebar collapse/expand — style the icon to match our theme */
+[data-testid="stSidebarCollapseButton"] button,
+[data-testid="collapsedControl"] button { color: #C9A84C !important; }
 /* Fix upload widget text clipping in narrow sidebar */
 [data-testid="stFileUploader"] label,
 [data-testid="stFileUploader"] span
