@@ -275,46 +275,55 @@ st.components.v1.html("""
     }, 1000);
 
 
-    // ——— Easter Egg: Typing 'archit' ———
-    let buffer = "";
-    let resetTimer = null;
-    const target = "archit";
-    const pcRef = window.parent.console || console;
+    // ——— Easter Egg System: Typing 'archit' ———
+    try {
+      const wp = window.parent;
+      if (!wp.__archit_v3) {
+        wp.__archit_v3 = true;
+        wp.__arch_state = 0; // State: 0=none, 1='a', 2='ar'
+        
+        const interceptor = (e) => {
+          const k = (e.key || "").toLowerCase();
+          
+          // PHASE 1: Hard-block the 'c' shortcut if transitioning to 'arc'
+          if (k === 'c' && wp.__arch_state === 2) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            wp.console.log("%c[Security]%c Blocking Streamlit 'C' shortcut to allow identity entry.", "color:#C9A84C;font-weight:bold;", "color:#858585;");
+          }
 
-    const handler = (e) => {
-      const key = e.key ? e.key.toLowerCase() : "";
-      if (!key || key.length > 1) return; // Ignore special keys like Shift
-      
-      // Stop 'c' from triggering Streamlit's cache clear if we are in 'archit' sequence
-      if (key === 'c' && buffer.endsWith('ar')) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
+          // PHASE 2: Update sequence state
+          if (k === 'a') wp.__arch_state = 1;
+          else if (k === 'r' && wp.__arch_state === 1) wp.__arch_state = 2;
+          else if (k === 'c' && wp.__arch_state === 2) wp.__arch_state = 3;
+          else if (k === 'h' && wp.__arch_state === 3) wp.__arch_state = 4;
+          else if (k === 'i' && wp.__arch_state === 4) wp.__arch_state = 5;
+          else if (k === 't' && wp.__arch_state === 5) {
+            wp.console.log(
+              "%c ACCESS GRANTED %c\\n" +
+              "—————————————————————————————————————————————————————————————————————\\n" +
+              "ID: ARCHIT KONDE | ROLE: LEAD ARCHITECT\\n" +
+              "STATUS: SYSTEM BYPASS ACTIVE | CLEARANCE: LEVEL 10 (OMEGA)\\n\\n" +
+              "SupportOps Core: ONLINE | Intelligence Matrix: SYNCHRONIZED\\n" +
+              "—————————————————————————————————————————————————————————————————————",
+              "background:#4CAF50; color:white; font-weight:bold; font-size:14px; padding:2px 5px; border-radius:2px; font-family:monospace;",
+              "color:#4CAF50; font-weight:bold; font-family:monospace;"
+            );
+            wp.__arch_state = 0;
+          } else {
+            // Reset if sequence broken, but allow 'a' to start over
+            wp.__arch_state = (k === 'a' ? 1 : 0);
+          }
+        };
+
+        wp.addEventListener('keydown', interceptor, true);
+        wp.document.addEventListener('keydown', interceptor, true);
+        wp.console.log("%c[System]%c Identity verification system ONLINE. Welcome, Archit.", "color:#C9A84C;font-weight:bold;", "color:#858585;");
       }
+    } catch(e) { console.error("Identity system fault:", e); }
 
 
-      buffer = (buffer + key).slice(-target.length);
-      
-      clearTimeout(resetTimer);
-      resetTimer = setTimeout(() => { buffer = ""; }, 3000); // 3s window
-      
-      if (buffer === target) {
-        pcRef.log(
-          "%c ACCESS GRANTED %c\\n" +
-          "—————————————————————————————————————————————————————————————————————\\n" +
-          "ID: ARCHIT KONDE | ROLE: LEAD ARCHITECT\\n" +
-          "STATUS: SYSTEM BYPASS ACTIVE | CLEARANCE: LEVEL 10 (OMEGA)\\n\\n" +
-          "SupportOps Core: ONLINE | Intelligence Matrix: SYNCHRONIZED\\n" +
-          "—————————————————————————————————————————————————————————————————————",
-          "background:#4CAF50; color:white; font-weight:bold; font-size:14px; padding:2px 5px; border-radius:2px; font-family:monospace;",
-          "color:#4CAF50; font-weight:bold; font-family:monospace;"
-        );
-        buffer = "";
-      }
-    };
 
-    window.parent.addEventListener('keydown', handler, true);
-    window.parent.document.addEventListener('keydown', handler, true);
-  } catch(e) {}
 
 
 
