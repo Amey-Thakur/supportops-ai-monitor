@@ -150,12 +150,26 @@ def triage_ticket(ticket: dict) -> dict | None:
             ],
             max_tokens=120,
             temperature=0,
+            timeout=30,
         )
         latency_ms = (time.time() - start) * 1000
         raw = response.choices[0].message.content.strip()
 
-        # Parse JSON response
-        result = json.loads(raw)
+        # Parse JSON response — guard against malformed/non-JSON replies
+        try:
+            result = json.loads(raw)
+        except json.JSONDecodeError:
+            log = {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "endpoint": "/v1/chat/completions",
+                "status_code": 200,
+                "latency_ms": round(latency_ms, 2),
+                "success": 0,
+                "error_type": "parse_error",
+                "ticket_id": ticket["ticket_id"],
+            }
+            db.insert_api_log(log)
+            return None
 
         # Validate fields
         valid_categories = {"api", "billing", "account", "safety", "other"}

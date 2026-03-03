@@ -78,8 +78,8 @@ class TestGenerateBatch:
         assert len(ids) == len(set(ids)), "Duplicate ticket IDs found"
 
     def test_all_categories_represented_in_large_batch(self):
-        """A batch of 200 tickets should hit all 5 categories (probabilistic but safe)."""
-        tickets = tg.generate_batch(n=200)
+        """500 tickets across 5 categories: P(missing any one) < 2e-44. Deterministically safe."""
+        tickets = tg.generate_batch(n=500)
         categories = {t["category"] for t in tickets}
         assert categories == VALID_CATEGORIES
 

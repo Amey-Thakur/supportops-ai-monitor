@@ -35,12 +35,13 @@ COLORS = {
     "danger":  "#f87171",
     "neutral": "#6b7280",
     "indigo":  "#818cf8",
+    "yellow":  "#facc15",
 }
 
-PRIORITY_COLORS  = {"critical": COLORS["danger"],  "high": COLORS["warning"], "medium": "#facc15", "low": COLORS["success"]}
+PRIORITY_COLORS  = {"critical": COLORS["danger"],  "high": COLORS["warning"], "medium": COLORS["yellow"], "low": COLORS["success"]}
 SENTIMENT_COLORS = {"positive": COLORS["success"], "neutral": COLORS["neutral"], "negative": COLORS["danger"]}
-ERROR_COLORS     = {"rate_limit": COLORS["warning"], "server_error": COLORS["danger"], "timeout": "#facc15", "unknown": COLORS["neutral"]}
-HTTP_COLORS      = {"200": COLORS["success"], "429": COLORS["warning"], "500": COLORS["danger"], "408": "#facc15", "0": COLORS["neutral"]}
+ERROR_COLORS     = {"rate_limit": COLORS["warning"], "server_error": COLORS["danger"], "timeout": COLORS["yellow"], "unknown": COLORS["neutral"]}
+HTTP_COLORS      = {"200": COLORS["success"], "429": COLORS["warning"], "500": COLORS["danger"], "408": COLORS["yellow"], "0": COLORS["neutral"]}
 
 CHART_H_PRIMARY   = 300
 CHART_H_SECONDARY = 220
@@ -151,89 +152,15 @@ header[data-testid="stHeader"] {
 [data-testid="stFileUploader"] span
   { word-wrap: break-word !important; overflow-wrap: break-word !important;
     font-size: 0.78rem !important; }
-/* Print-break marker — invisible on screen */
-.print-page-break { height: 0; overflow: hidden; margin: 0; padding: 0; }
-
-/* Print-only ticket table — hidden on screen, shown in print */
-.print-ticket-table { display: none; }
-.print-ticket-table table {
-  width: 100%; border-collapse: collapse;
-  font-size: 0.58rem; line-height: 1.25; table-layout: fixed;
-}
-.print-ticket-table th, .print-ticket-table td {
-  border: 1px solid #3e3e42; padding: 0.22rem 0.28rem;
-  text-align: left; vertical-align: top;
-  overflow-wrap: anywhere; word-break: break-word;
-}
-.print-ticket-table th {
-  color: #C9A84C; background: #252526; font-weight: 700;
-}
-.print-ticket-page {
-  margin-top: 0.75rem; border: 1px solid #3e3e42;
-  border-radius: 4px; overflow: hidden;
-}
-.print-ticket-page-header {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 0.32rem 0.48rem; background: #252526;
-  border-bottom: 1px solid #3e3e42;
-  color: #C9A84C; font-size: 0.62rem; font-weight: 700;
-}
-
-/* Print styles — Ctrl+P on the live dashboard */
+/* Minimal print fallback — hides chrome if user hits Ctrl+P on dashboard.
+   For a proper PDF, use the Download PDF Report button instead. */
 @media print {
-  @page { margin: 1.6cm; size: A4 portrait; }
-
-  html, body, .stApp,
-  [data-testid="stAppViewContainer"],
-  [data-testid="stMain"] {
-    background: #1e1e1e !important;
-    color: #d4d4d4 !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  /* Hide all interactive chrome */
   section[data-testid="stSidebar"],
   header[data-testid="stHeader"],
   .custom-footer, .back-to-top, iframe,
   [data-testid="stSidebarCollapseButton"],
   [data-testid="stBottomBlockContainer"],
-  .stButton,
-  [data-testid="stCheckbox"],
-  [data-testid="stFileUploader"],
-  [data-testid="stSlider"],
-  [data-testid="stSelectbox"],
-  [data-testid="stTextArea"],
-  [data-testid="stCaption"],
-  .print-hide-section,
-  hr { display: none !important; }
-
-  /* Page break before HTTP Status chart */
-  .print-page-break {
-    display: block !important;
-    height: 1px !important;
-    break-before: page;
-    page-break-before: always;
-  }
-
-  /* Swap Streamlit dataframe for static HTML table */
-  [data-testid="stDataFrame"] { display: none !important; }
-  .print-ticket-table { display: block !important; }
-  .print-ticket-page {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-  .print-ticket-page.break-before {
-    break-before: page;
-    page-break-before: always;
-  }
-
-  /* Keep charts/metrics intact across pages */
-  [data-testid="stPlotlyChart"] { page-break-inside: avoid; break-inside: avoid; }
-  [data-testid="stMetric"] { page-break-inside: avoid; break-inside: avoid; }
-  .main .block-container { padding-bottom: 0 !important; }
-
-  /* Full width (sidebar hidden) */
+  .stButton { display: none !important; }
   .main { margin-left: 0 !important; width: 100% !important; }
   [data-testid="stMainBlockContainer"] { max-width: 100% !important; }
 }
@@ -305,11 +232,10 @@ st.markdown("""
 
 
 # ── Terminal-style section headers ────────────────────────────────────────────
-def _term(cmd, hide_print=False):
+def _term(cmd):
     """Render a terminal-style section header: $ cmd."""
-    cls = "term-cmd print-hide-section" if hide_print else "term-cmd"
     st.markdown(
-        f'<p class="{cls}" style="font-family:\'JetBrains Mono\',monospace;font-size:0.95rem;'
+        f'<p class="term-cmd" style="font-family:\'JetBrains Mono\',monospace;font-size:0.95rem;'
         f'color:#d4d4d4;margin:1rem 0 0.5rem;">'
         f'<span style="color:#C9A84C;font-weight:600;">$</span> {cmd}</p>',
         unsafe_allow_html=True,
@@ -449,16 +375,12 @@ def _build_html_report(all_tix: list, api_logs_raw: list, t_stats: dict, a_stats
     err_rows = _tbl_rows(a_stats.get("errors_by_type", {})) or "<tr><td colspan='2'>None</td></tr>"
 
     # ── Ticket queue rows ────────────────────────────────────────────────────
-    pri_badge = {
-        "critical": "#f87171", "high": "#fb923c",
-        "medium":   "#facc15", "low":  "#4ade80",
-    }
     ticket_rows = "".join(
         f"<tr>"
         f"<td>{t.get('ticket_id','')}</td>"
         f"<td>{t.get('customer','')}</td>"
         f"<td>{str(t.get('subject',''))[:65]}</td>"
-        f"<td style='color:{pri_badge.get(t.get('priority',''),'#d4d4d4')}'>"
+        f"<td style='color:{PRIORITY_COLORS.get(t.get('priority',''),'#d4d4d4')}'>"
         f"  {t.get('priority','')}</td>"
         f"<td>{t.get('status','')}</td>"
         f"<td>{t.get('category') or '—'}</td>"
@@ -990,9 +912,6 @@ if not api_df.empty:
         else:
             st.success("No API errors recorded.")
 
-    # Page-break marker — forces Ctrl+P to start a new page before HTTP chart
-    st.markdown('<div class="print-page-break"></div>', unsafe_allow_html=True)
-
     code_counts = api_df["status_code"].value_counts().reset_index()
     code_counts.columns = ["status_code", "count"]
     code_counts["status_code"] = code_counts["status_code"].astype(str)
@@ -1028,39 +947,13 @@ if not ticket_df.empty:
         badge = {
             "critical": f"color: {COLORS['danger']}; border: 1px solid {COLORS['danger']}; {base}",
             "high":     f"color: {COLORS['warning']}; border: 1px solid {COLORS['warning']}; {base}",
-            "medium":   f"color: #facc15; border: 1px solid #facc15; {base}",
+            "medium":   f"color: {COLORS['yellow']}; border: 1px solid {COLORS['yellow']}; {base}",
             "low":      f"color: {COLORS['success']}; border: 1px solid {COLORS['success']}; {base}",
         }
         return badge.get(val, "")
 
     styled = display_df.style.map(priority_badge, subset=["priority"])
     st.dataframe(styled, use_container_width=True, height=400)
-
-    # Print-only static HTML table — Streamlit's dataframe is virtualized and
-    # doesn't render properly in Ctrl+P. This hidden table shows only in print.
-    print_cols = [c for c in display_cols if c in display_df.columns]
-    print_df = display_df[print_cols].fillna("—")
-    rows_per_page = 18
-    total_rows = len(print_df)
-    total_pages = max(1, (total_rows + rows_per_page - 1) // rows_per_page)
-    pages_html = []
-    for pg in range(total_pages):
-        start = pg * rows_per_page
-        end = min(start + rows_per_page, total_rows)
-        chunk = print_df.iloc[start:end]
-        cls = "print-ticket-page break-before" if pg > 0 else "print-ticket-page"
-        table_html = chunk.to_html(index=False, escape=True)
-        pages_html.append(
-            f'<div class="{cls}">'
-            f'<div class="print-ticket-page-header">'
-            f'<span>Tickets {start + 1}\u2013{end} of {total_rows}</span>'
-            f'<span>Page {pg + 1}/{total_pages}</span>'
-            f'</div>{table_html}</div>'
-        )
-    st.markdown(
-        f'<div class="print-ticket-table">{"".join(pages_html)}</div>',
-        unsafe_allow_html=True,
-    )
 
     if st.toggle("› View ticket details", key="toggle_ticket_details"):
         with st.container(border=True):
@@ -1094,7 +987,7 @@ if not ticket_df.empty:
 st.divider()
 
 # ── Section 5: Raw API Logs ───────────────────────────────────────────────────
-_term("tail -f api.log", hide_print=True)
+_term("tail -f api.log")
 if st.toggle("› Show last 100 API calls", key="toggle_api_logs"):
     with st.container(border=True):
         if not api_df.empty:
@@ -1105,7 +998,7 @@ if st.toggle("› Show last 100 API calls", key="toggle_api_logs"):
 st.divider()
 
 # ── Section 6: Export ─────────────────────────────────────────────────────────
-_term("export --format pdf", hide_print=True)
+_term("export --format pdf")
 if all_tickets:
     _report_stats  = load_ticket_stats(st.session_state.data_version)
     _report_api    = load_api_health_stats(st.session_state.data_version) if api_logs else {}
