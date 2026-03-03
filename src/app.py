@@ -155,79 +155,94 @@ header[data-testid="stHeader"] {
 /* Minimal print fallback — hides chrome if user hits Ctrl+P on dashboard.
    For a proper PDF, use the Download PDF Report button instead. */
 @media print {
-  /* 1. Hide interactive/UI elements */
+  /* 1. Complete UI Stripping */
   section[data-testid="stSidebar"],
   header[data-testid="stHeader"],
   .custom-footer, .back-to-top, iframe,
   [data-testid="stSidebarCollapseButton"],
   [data-testid="stBottomBlockContainer"],
   [data-testid="stFileUploader"],
-  .stButton, .stCheckbox, .stToggle, .stDownloadButton { display: none !important; }
+  .stButton, .stCheckbox, .stToggle, .stDownloadButton,
+  #MainMenu, footer, .stSpinner { display: none !important; }
 
-  /* 2. Force light theme & reset layout */
-  .stApp, .main, .stAppViewContainer, .stAppMain {
+  /* 2. Absolute Light Mode Force */
+  html, body, .stApp, .main, .stAppViewContainer, .stAppMain, 
+  [data-testid="stAppViewContainer"], [data-testid="stMainBlockContainer"] {
     background-color: white !important;
+    background: white !important;
     color: black !important;
   }
   
   [data-testid="stMainBlockContainer"] { 
     max-width: 100% !important; 
-    padding: 0.5cm !important; 
+    padding: 0 !important; 
     margin: 0 !important;
   }
 
-  /* 3. Ensure all text and headers are black/visible */
-  h1, h2, h3, p, span, div, label, .term-cmd { 
+  /* 3. Text & Header Visibility */
+  h1, h2, h3, h4, h5, h6, p, span, div, label, .term-cmd { 
     color: black !important; 
+    background-color: transparent !important;
     text-shadow: none !important;
   }
   
   .term-cmd {
-    border-bottom: 1px solid #C9A84C !important;
+    border-bottom: 2px solid #C9A84C !important;
     padding-bottom: 4px !important;
-    margin: 1.5rem 0 1rem 0 !important;
+    margin: 2rem 0 1rem 0 !important;
     font-weight: bold !important;
+    display: block !important;
   }
   
   .term-cmd span { color: #C9A84C !important; }
 
-  /* 4. Fix Metric Visibility */
+  /* 4. KPI & Metric Fixes */
   [data-testid="metric-container"] {
     background: #fdfdfd !important;
-    border: 1px solid #eeeeee !important;
-    padding: 10px !important;
-    border-radius: 4px !important;
+    border: 1px solid #dddddd !important;
+    box-shadow: none !important;
   }
-  [data-testid="stMetricValue"] { color: #C9A84C !important; }
-  [data-testid="stMetricLabel"] { color: #666666 !important; }
+  [data-testid="stMetricValue"] { color: #C9A84C !important; font-weight: bold !important; }
+  [data-testid="stMetricLabel"] { color: #444444 !important; }
 
-  /* 5. Charts & Images - Invert if dark or ensure brightness */
-  div[data-testid="stPlotlyChart"] {
-    margin-bottom: 30px !important;
+  /* 5. Chart & Diagram Inversion (Dark to Light) */
+  /* This is the magic trick to turn dark-themed Plotly charts into light-themed ones */
+  div[data-testid="stPlotlyChart"], .stPlotlyChart {
+    filter: invert(0.9) hue-rotate(180deg) !important;
+    background: white !important;
+    margin-bottom: 2rem !important;
     page-break-inside: avoid !important;
   }
 
-  /* 6. Table styling for paper */
-  .stDataFrame, table {
-    width: 100% !important;
-    border: 1px solid #dddddd !important;
+  /* 6. Table & DataFrame Clean-up */
+  .stDataFrame, [data-testid="stTable"], table {
     background-color: white !important;
     color: black !important;
+    border: 1px solid #cccccc !important;
   }
   
-  th { background-color: #f1f1f1 !important; color: black !important; }
-  td { border: 1px solid #eeeeee !important; }
+  /* Override Streamlit's internal dataframe dark styles */
+  [data-testid="stDataFrame"] div, [data-testid="stDataFrame"] canvas {
+    filter: invert(0.9) hue-rotate(180deg) !important;
+  }
 
-  /* 7. Page breaks - only for major sections */
-  hr { display: block !important; border: 0 !important; border-top: 1px solid #eeeeee !important; margin: 2rem 0 !important; }
+  th { background-color: #eeeeee !important; color: black !important; font-weight: bold !important; }
+  td { border: 1px solid #eeeeee !important; color: black !important; }
+
+  /* 7. Strip background colors from everything else */
+  * { 
+    -webkit-print-color-adjust: exact !important; 
+    print-color-adjust: exact !important;
+    box-shadow: none !important;
+  }
   
-  /* Prevent weird blank pages by removing aggressive page breaks on every header */
-  h1, h2 { break-before: auto !important; margin-top: 40px !important; }
+  hr { display: none !important; }
   
-  /* Use explicit section IDs or logical breaks if needed, but keep it flowing */
-  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  /* Prevent large gaps and weird spacing */
+  .element-container { margin-bottom: 1rem !important; }
 }
 </style>
+
 
 
 """, unsafe_allow_html=True)
