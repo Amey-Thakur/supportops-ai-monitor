@@ -98,19 +98,9 @@ footer { visibility: hidden !important; }
   { color: #C9A84C !important; }
 /* Hide Streamlit header anchor icon */
 [data-testid="StyledLinkIconContainer"] { display: none !important; }
-/* Hide broken Material Icon ligature text ("arrow_right") in expanders.
-   @import can't load the font mid-stylesheet, so hide the icon span entirely
-   and replace with a pure-CSS arrow via ::before on the summary. */
+/* Expander arrow — CSS hides what it can, JS below removes the rest */
 [data-testid="stExpanderToggleIcon"],
-[data-testid="stSidebarCollapseButton"] span,
-details summary svg,
-details summary > div > span:first-child {
-  display: none !important;
-  font-size: 0 !important;
-  width: 0 !important;
-  overflow: hidden !important;
-}
-/* Add a clean > arrow that rotates when expanded */
+[data-testid="stSidebarCollapseButton"] span { display: none !important; }
 details summary::before {
   content: "›";
   display: inline-block;
@@ -121,9 +111,7 @@ details summary::before {
   transition: transform 0.2s ease;
   font-family: 'JetBrains Mono', monospace;
 }
-details[open] summary::before {
-  transform: rotate(90deg);
-}
+details[open] summary::before { transform: rotate(90deg); }
 /* Hide Streamlit top bar (Rerun / Settings / Made with Streamlit) */
 header[data-testid="stHeader"] { display: none !important; }
 #MainMenu { display: none !important; }
@@ -142,6 +130,29 @@ header[data-testid="stHeader"] { display: none !important; }
   [data-testid="metric-container"] { border: 1px solid #ccc !important; background: white !important; }
 }
 </style>
+<script>
+// Remove literal "arrow_right" text from Streamlit expander summaries.
+// Material Icons font often fails to load on HuggingFace (CSP), leaving
+// the ligature text visible. This walks text nodes and strips it.
+(function(){
+  function fix(){
+    document.querySelectorAll('details summary').forEach(function(s){
+      var tw=document.createTreeWalker(s,NodeFilter.SHOW_TEXT,null,false);
+      var n;
+      while(n=tw.nextNode()){
+        if(n.textContent.indexOf('arrow_right')!==-1){
+          n.textContent=n.textContent.replace(/arrow_right/g,'');
+        }
+        if(n.textContent.indexOf('arrow_drop_down')!==-1){
+          n.textContent=n.textContent.replace(/arrow_drop_down/g,'');
+        }
+      }
+    });
+  }
+  fix();
+  new MutationObserver(fix).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
 """, unsafe_allow_html=True)
 
 # ── Fixed footer + scroll-to-top (rendered early so st.stop() can't hide them) ─
