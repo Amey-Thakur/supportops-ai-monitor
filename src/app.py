@@ -275,69 +275,75 @@ st.components.v1.html("""
     }, 1000);
 
 
-    // ——— Easter Egg: Inject directly into parent document ———
-    // Scripts inside st.components.v1.html run in an iframe. Streamlit's
-    // own keyboard shortcuts run in the PARENT document. To intercept
-    // the 'C' shortcut we MUST inject our listener into the parent
-    // document so it runs in the same execution context.
+    // ——— Easter Egg: Type 'archit' for a surprise ———
+    // Strategy: Don't fight Streamlit's 'C' shortcut. Instead,
+    // auto-dismiss the "Clear caches" dialog if it appears mid-sequence,
+    // and show a clean popup when the full word is typed.
     try {
-      const pdoc = window.parent.document;
-      if (!pdoc.__archit_injected) {
-        pdoc.__archit_injected = true;
-        const s = pdoc.createElement('script');
-        s.textContent = `
-          (function(){
-            var buf = "";
-            var timer = null;
-            document.addEventListener('keydown', function(e) {
-              var k = (e.key || "").toLowerCase();
-              if (!k || k.length > 1) return;
+      var pdoc = window.parent.document;
+      if (!pdoc._archit_egg_v2) {
+        pdoc._archit_egg_v2 = true;
+        var buf = '';
+        var tmr = null;
+        var midSequence = false;
 
-              // Block 'c' shortcut ONLY when completing 'arc' sequence
-              if (k === 'c' && buf.endsWith('ar')) {
-                e.preventDefault();
-                e.stopImmediatePropagation();
-                return false;
-              }
+        // MutationObserver: auto-dismiss cache dialog during 'archit' typing
+        var obs = new MutationObserver(function() {
+          if (!midSequence) return;
+          var btns = pdoc.querySelectorAll('[data-testid="stBaseButton-secondary"]');
+          btns.forEach(function(b) {
+            if (b.textContent.trim() === 'Cancel') b.click();
+          });
+        });
+        obs.observe(pdoc.body, { childList: true, subtree: true });
 
-              buf = (buf + k).slice(-6);
-              clearTimeout(timer);
-              timer = setTimeout(function(){ buf = ""; }, 1500);
+        pdoc.addEventListener('keydown', function(e) {
+          var k = (e.key || '').toLowerCase();
+          if (!k || k.length > 1) return;
 
-              if (buf === "archit") {
-                buf = "";
-                if (document.getElementById('archit_overlay')) return;
-                var div = document.createElement('div');
-                div.id = 'archit_overlay';
-                div.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,10,10,0.95);z-index:2147483647;display:flex;align-items:center;justify-content:center;color:#C9A84C;font-family:monospace;backdrop-filter:blur(10px);cursor:pointer;opacity:0;transition:opacity 0.4s;";
-                div.innerHTML = '<div style="border:1px solid rgba(201,168,76,0.5);padding:60px;background:#141414;box-shadow:0 20px 80px rgba(0,0,0,0.8);text-align:center;position:relative;overflow:hidden;border-radius:4px;">'
-                  + '<div style="position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,#C9A84C,transparent);animation:architScan 3s linear infinite;"></div>'
-                  + '<h1 style="margin:0;font-size:2.5rem;letter-spacing:10px;font-weight:900;text-transform:uppercase;text-shadow:0 0 20px rgba(201,168,76,0.3);">Access Granted</h1>'
-                  + '<div style="margin:30px auto;width:60px;height:2px;background:#C9A84C;"></div>'
-                  + '<div style="font-size:1.1rem;color:#888;letter-spacing:2px;margin-bottom:10px;text-transform:uppercase;">Security Clearance: <span style="color:#C9A84C;">Level 10 (Omega)</span></div>'
-                  + '<div style="font-size:1.3rem;color:#d4d4d4;font-weight:700;margin-bottom:40px;">Architect: <span style="color:#C9A84C;">Archit Konde</span></div>'
-                  + '<div style="font-size:0.9rem;color:#666;max-width:400px;line-height:1.6;font-style:italic;">The SupportOps infrastructure is operating under peak efficiency. All intelligence cores synchronized. Systems awaiting your command.</div>'
-                  + '<div style="margin-top:50px;font-size:0.7rem;color:#444;text-transform:uppercase;letter-spacing:3px;">Click anywhere to return to monitor</div>'
-                  + '</div>';
-                var style = document.createElement('style');
-                style.textContent = '@keyframes architScan { 0% { transform:translateX(-100%); } 100% { transform:translateX(100%); } }';
-                document.head.appendChild(style);
-                document.body.appendChild(div);
-                requestAnimationFrame(function(){ div.style.opacity = '1'; });
-                var closeFn = function(){
-                  div.style.opacity = '0';
-                  setTimeout(function(){ div.remove(); }, 400);
-                };
-                div.onclick = closeFn;
-                setTimeout(closeFn, 8000);
-                console.log("%c ACCESS GRANTED %c Welcome, Architect.", "background:#C9A84C;color:#1e1e1e;font-weight:bold;padding:2px 5px;", "color:#C9A84C;");
-              }
-            }, true); // CAPTURE phase — fires before React/Streamlit handlers
-          })();
-        `;
-        pdoc.head.appendChild(s);
+          buf = (buf + k).slice(-6);
+          midSequence = (buf.length > 0 && 'archit'.startsWith(buf));
+          clearTimeout(tmr);
+          tmr = setTimeout(function() { buf = ''; midSequence = false; }, 2000);
+
+          if (buf === 'archit') {
+            buf = '';
+            midSequence = false;
+            if (pdoc.getElementById('archit_popup')) return;
+
+            var overlay = pdoc.createElement('div');
+            overlay.id = 'archit_popup';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:2147483647;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);cursor:pointer;opacity:0;transition:opacity 0.3s ease;';
+            overlay.innerHTML =
+              '<div style="background:#1e1e1e;border:1px solid #333;border-radius:12px;padding:48px 56px;max-width:440px;width:90%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.6);font-family:sans-serif;" onclick="event.stopPropagation();">'
+              + '<div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#C9A84C,#8B7332);margin:0 auto 24px;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:bold;color:#1e1e1e;">AK</div>'
+              + '<h2 style="margin:0 0 6px;color:#e0e0e0;font-size:1.5rem;font-weight:700;">Archit Konde</h2>'
+              + '<p style="margin:0 0 20px;color:#C9A84C;font-size:0.85rem;letter-spacing:1px;text-transform:uppercase;">Developer &bull; Engineer &bull; Builder</p>'
+              + '<p style="margin:0 0 28px;color:#999;font-size:0.9rem;line-height:1.7;">Designed and built this SupportOps AI Monitor to bridge the gap between raw support data and actionable intelligence. Passionate about clean code, thoughtful design, and tools that make teams more effective.</p>'
+              + '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">'
+              + '<a href="https://archit-konde.github.io/" target="_blank" style="display:inline-block;padding:10px 22px;background:#C9A84C;color:#1e1e1e;text-decoration:none;border-radius:6px;font-size:0.85rem;font-weight:600;">Portfolio</a>'
+              + '<a href="https://github.com/Archit-Konde/supportops-ai-monitor" target="_blank" style="display:inline-block;padding:10px 22px;background:#333;color:#e0e0e0;text-decoration:none;border-radius:6px;font-size:0.85rem;font-weight:600;border:1px solid #555;">GitHub</a>'
+              + '</div>'
+              + '<p style="margin:28px 0 0;color:#555;font-size:0.7rem;">Press Escape or click outside to close</p>'
+              + '</div>';
+
+            pdoc.body.appendChild(overlay);
+            requestAnimationFrame(function() { overlay.style.opacity = '1'; });
+
+            var closeFn = function() {
+              overlay.style.opacity = '0';
+              setTimeout(function() { overlay.remove(); }, 300);
+            };
+            overlay.addEventListener('click', closeFn);
+            pdoc.addEventListener('keydown', function esc(ev) {
+              if (ev.key === 'Escape') { closeFn(); pdoc.removeEventListener('keydown', esc, true); }
+            }, true);
+            setTimeout(closeFn, 12000);
+          }
+        }, true);
       }
-    } catch(e) { }
+    } catch(e) {}
+
 
 
 
