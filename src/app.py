@@ -151,6 +151,9 @@ header[data-testid="stHeader"] {
 [data-testid="stFileUploader"] span
   { word-wrap: break-word !important; overflow-wrap: break-word !important;
     font-size: 0.78rem !important; }
+/* Print-break marker — invisible on screen */
+.print-page-break { height: 0; overflow: hidden; margin: 0; padding: 0; }
+
 /* Print styles — Ctrl+P on the live dashboard */
 @media print {
   @page { margin: 1.5cm; size: A4 landscape; }
@@ -161,7 +164,7 @@ header[data-testid="stHeader"] {
     print-color-adjust: exact !important;
   }
 
-  /* Hide interactive / nav chrome */
+  /* Hide interactive / nav chrome + decorative elements */
   section[data-testid="stSidebar"],
   header[data-testid="stHeader"],
   .custom-footer,
@@ -175,14 +178,24 @@ header[data-testid="stHeader"] {
   [data-testid="stSlider"],
   [data-testid="stSelectbox"],
   [data-testid="stTextArea"],
-  [data-testid="stCaption"] { display: none !important; }
+  [data-testid="stCaption"],
+  .print-hide-section,
+  hr { display: none !important; }
 
-  /* Page break control */
+  /* Force page break before HTTP Status chart */
+  .print-page-break {
+    display: block !important;
+    break-before: page;
+    page-break-before: always;
+  }
+
+  /* Page break control — keep charts and metrics intact */
   [data-testid="stPlotlyChart"] { page-break-inside: avoid; }
   [data-testid="stMetric"] { page-break-inside: avoid; }
+  [data-testid="stDataFrame"] { page-break-inside: avoid; }
   .main .block-container { padding-bottom: 0 !important; }
 
-  /* Expand main content to full width since sidebar is hidden */
+  /* Expand main to full width (sidebar hidden) */
   .main { margin-left: 0 !important; width: 100% !important; }
   [data-testid="stMainBlockContainer"] { max-width: 100% !important; }
 }
@@ -254,10 +267,11 @@ st.markdown("""
 
 
 # ── Terminal-style section headers ────────────────────────────────────────────
-def _term(cmd):
+def _term(cmd, hide_print=False):
     """Render a terminal-style section header: $ cmd."""
+    cls = "term-cmd print-hide-section" if hide_print else "term-cmd"
     st.markdown(
-        f'<p style="font-family:\'JetBrains Mono\',monospace;font-size:0.95rem;'
+        f'<p class="{cls}" style="font-family:\'JetBrains Mono\',monospace;font-size:0.95rem;'
         f'color:#d4d4d4;margin:1rem 0 0.5rem;">'
         f'<span style="color:#C9A84C;font-weight:600;">$</span> {cmd}</p>',
         unsafe_allow_html=True,
@@ -406,7 +420,7 @@ def _build_html_report(all_tix: list, api_logs_raw: list, t_stats: dict, a_stats
         f"<td>{t.get('ticket_id','')}</td>"
         f"<td>{t.get('customer','')}</td>"
         f"<td>{str(t.get('subject',''))[:65]}</td>"
-        f"<td style='color:{pri_badge.get(t.get(\"priority\",\"\"),\"#d4d4d4\")}'>"
+        f"<td style='color:{pri_badge.get(t.get('priority',''),'#d4d4d4')}'>"
         f"  {t.get('priority','')}</td>"
         f"<td>{t.get('status','')}</td>"
         f"<td>{t.get('category') or '—'}</td>"
@@ -928,6 +942,9 @@ if not api_df.empty:
         else:
             st.success("No API errors recorded.")
 
+    # Page-break marker — forces Ctrl+P to start a new page before HTTP chart
+    st.markdown('<div class="print-page-break"></div>', unsafe_allow_html=True)
+
     code_counts = api_df["status_code"].value_counts().reset_index()
     code_counts.columns = ["status_code", "count"]
     code_counts["status_code"] = code_counts["status_code"].astype(str)
@@ -1003,7 +1020,7 @@ if not ticket_df.empty:
 st.divider()
 
 # ── Section 5: Raw API Logs ───────────────────────────────────────────────────
-_term("tail -f api.log")
+_term("tail -f api.log", hide_print=True)
 if st.toggle("› Show last 100 API calls", key="toggle_api_logs"):
     with st.container(border=True):
         if not api_df.empty:
@@ -1014,7 +1031,7 @@ if st.toggle("› Show last 100 API calls", key="toggle_api_logs"):
 st.divider()
 
 # ── Section 6: Export ─────────────────────────────────────────────────────────
-_term("export --format pdf")
+_term("export --format pdf", hide_print=True)
 if all_tickets:
     _report_stats  = load_ticket_stats(st.session_state.data_version)
     _report_api    = load_api_health_stats(st.session_state.data_version) if api_logs else {}
