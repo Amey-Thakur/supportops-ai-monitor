@@ -1,77 +1,83 @@
-# Contributing to SupportOps AI Monitor
+# Contributing Guidelines
 
-Thanks for your interest. This is a portfolio project, so the contribution bar is intentionally low — most improvements are welcome as long as they fit the project's scope.
-
----
-
-## What Belongs Here
-
-**Suitable contributions:**
-- Bug fixes (simulation accuracy, DB edge cases, Streamlit rendering)
-- Documentation improvements (README, blog post corrections, deployment guide)
-- New chart types or dashboard panels that fit the existing data model
-- Test coverage improvements (currently at 46 tests)
-
-**Out of scope:**
-- Replacing SQLite with a different database (intentional architecture choice)
-- Breaking changes to the four-module pipeline structure (`ticket_generator → database → ai_triage → app`)
-- Adding a build system, bundler, or package manager
-
-If you are unsure whether something fits, open an issue before building it.
+Thank you for your interest in contributing to **SupportOps AI Monitor**. This project is maintained as a stable portfolio piece and professional reference. We welcome contributions that align with the platform's architectural philosophy and operational scope.
 
 ---
 
-## How to Contribute
+## 🏗️ Contribution Scope
 
-### 1. Fork and clone
+To maintain the project's technical integrity and focused design, we categorize contributions as follows:
+
+### Accepted Contributions
+- **Bug Fixes**: Addressing simulation inaccuracies, database edge cases, or UI rendering issues.
+- **Documentation**: Enhancing the README, technical documentation (docs/), or inline code commentary.
+- **Analytics**: Introducing new Plotly visualization panels or operational metrics that utilize the existing SQLite schema.
+- **Reliability**: Improving the test suite coverage and deterministic logic verification.
+
+### Out of Scope
+- **Architectural Modification**: Replacing the core SQLite persistence layer or the modular four-stage pipeline.
+- **Dependencies**: Introducing heavy third-party frameworks or build systems that deviate from the lightweight Python/Streamlit stack.
+- **Major Refactors**: Large-scale rewrites that alter the established "SupportOps" branding and terminal-inspired design language.
+
+---
+
+## 🛠️ Development Workflow
+
+Follow these steps to ensure a smooth contribution process:
+
+### 1. Environment Setup
+
+Clone the repository and prepare your local environment:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/supportops-ai-monitor.git
+git clone https://github.com/Archit-Konde/supportops-ai-monitor.git
 cd supportops-ai-monitor
-```
-
-### 2. Set up the environment
-
-```bash
+python -m venv venv
+# Activate venv (OS specific)
 pip install -r "Source Code/requirements.txt"
 ```
 
-No API key needed — simulation mode is fully functional.
-
-### 3. Run the tests before making changes
+### 2. Verification
+Before implementing changes, verify that the current baseline is stable:
 
 ```bash
 pytest "Source Code/tests/" -v
 ```
+All 46 tests must pass in the default simulation environment.
 
-All 46 tests should pass on a clean checkout.
+### 3. Standards & Style
+To maintain consistency, all code contributions must adhere to the following standards:
 
-### 4. Make your changes
+- **Naming**: Use clear, descriptive variable names.
+- **Code Style**: Max line length of **120 characters**.
+- **Persistence**: Database operations in `src/database.py` must follow the established `try/finally conn.close()` pattern.
+- **Logic**: Ensure all new features support the built-in **simulation mode** for zero-cost demonstration.
 
-Follow the existing code style:
-- Line length max: 120 characters (matches flake8 config in CI)
-- No new dependencies unless clearly justified
-- Any new database function follows the `try/finally conn.close()` pattern in `src/database.py`
-
-### 5. Run CI checks locally
+### 4. Quality Control (CI Simulation)
+Execute these checks locally before submitting your work:
 
 ```bash
-# Lint — syntax errors (must be clean)
+# Syntax & Logical Error Check
 flake8 "Source Code/src/" "Source Code/tests/" --count --select=E9,F63,F7,F82 --show-source --statistics
 
-# Style warnings (non-blocking)
-flake8 "Source Code/src/" "Source Code/tests/" --count --exit-zero --max-line-length=120 --statistics
-
-# Tests
+# Full Test Suite
 pytest "Source Code/tests/" -v --tb=short
 ```
 
-### 6. Open a pull request
+---
 
-Use the PR template. Keep the description focused on what changed and why.
+## 🚀 Submission Process
+
+1.  **Fork** the repository and create your feature branch.
+2.  **Commit** with clear, descriptive messages.
+3.  **Open a Pull Request** clearly detailing the problem solved and the technical approach taken.
 
 ---
 
-## Code of Conduct
+## ⚖️ Code of Conduct
 
-Be direct, be constructive, assume good intent.
+Maintain a professional, constructive, and direct communication style. We value technical clarity and respectful collaboration above all else.
+
+---
+
+*By contributing to this project, you agree that your work will be licensed under the [MIT License](LICENSE).*
